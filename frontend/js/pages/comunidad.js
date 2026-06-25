@@ -227,6 +227,7 @@ export async function init() {
   }
 
   function updateCategoryCounts(posts) {
+    if (currentCategory !== 'all') return;
     // Count posts per category from current data
     const counts = { tips: 0, health: 0, events: 0, search: 0 };
     posts.forEach(p => {

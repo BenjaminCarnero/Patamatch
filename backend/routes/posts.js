@@ -23,13 +23,11 @@ router.get('/', optionalAuth, async (req, res) => {
         p.*,
         u.name AS author_name,
         u.email AS author_email,
-        COUNT(pl.id) AS like_count,
+        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) AS like_count,
         (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) AS comment_count
       FROM posts p
       LEFT JOIN users u ON p.user_id = u.id
-      LEFT JOIN post_likes pl ON pl.post_id = p.id
       ${whereClause}
-      GROUP BY p.id, u.name, u.email
       ${orderClause}
     `;
 

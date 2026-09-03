@@ -121,7 +121,7 @@ export function render() {
   <!-- Hero Section -->
   <header class="relative overflow-hidden rounded-[2rem] mb-16 bg-surface-container-low min-h-[400px] flex items-center">
     <div class="absolute inset-0 z-0">
-      <img alt="Hero background" class="w-full h-full object-cover opacity-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2W7ujoP2O-zOaBoIUPG7TZH7iwwqb5-4VsmlAsp3W1xXUMJctdif45EiKMtvf1OSXeBpv0rU1tfcrGIs8kVh0UV8gZODot8GKiflQYZyONXW8KPn1dr1PKVJdzMWJnb4UqXVahdNyM8mCClMKcdkeKosGpCtujLciI-Bbr5D501vlTnup68I_bzj5KQvNtUP1C8o8jGHSfeiocSvrFtJfo8PT7Dg6m6Xvmuw88HN4xrCx1dthHkhjy3sweIWv0nY08a7V9ID0HCjX"/>
+      <img alt="Hero background" class="w-full h-full object-cover opacity-20" src="https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?w=1200&q=80&auto=format&fit=crop"/>
     </div>
     <div class="relative z-10 px-8 md:px-16 max-w-2xl">
       <span class="inline-block bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-label-sm mb-6">Latido de la Comunidad</span>

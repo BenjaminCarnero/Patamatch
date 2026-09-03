@@ -307,20 +307,20 @@ async function seedDatabase() {
   const hash = bcrypt.hashSync('demo123', 10);
 
   // Users
-  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['Sarah Miller', 'sarah@patamatch.com', hash, 'San Francisco, CA', 'https://lh3.googleusercontent.com/aida-public/AB6AXuB8Wm9pA1lUUib9HuVXuloRZ82CSu3bGco76b7dv6NYk3sqaAMrwG6_FKWvX7xDAeYrgyCdjGpDtY7gAjz8DBN1_PTvqTPL1brMiZEXpb0KIIO36B8Zx7i3ugxJdfZ2fck2t1Iirf0ItDcTFaFzoL5xhBZUDG5BPyl5QwNR0LOIGxJC0YHx2E4aBZG51vdPm-etERXmxttbGwr3LWT7kMq8QNrOczkkxAcaHcFmx-TkJ4HN7lS2zK28A1tvfWlT41ath_LrgFmBKEg-']);
-  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['David Chen', 'david@patamatch.com', hash, 'Austin, TX', 'https://lh3.googleusercontent.com/aida-public/AB6AXuAeG2S1vbkvQlmYX2rRCv1Ojgwa3cbXajbOu3xGfM1rHX-vxBnx65qG2UUfvO6tMRvaVtHrnBsmLkUNoRyUae8qyqfDdr85YeiTCs3sw0RBZAZwIxsIo9znaK07ZJxZTaBLK4_aScTdgBvN1yrNGVGvg6JimgCFoxQeowqTh0kEGNbNdXnyu_B_jg1V2y97Acu8Rbe6mx-c_1o5iAtgI6mc-rK0LeIb_CWKhl8kxPghVlrUAplS2Hyb5cOhu9Vb46aakq1yXTsWfCSW']);
+  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['Sarah Miller', 'sarah@patamatch.com', hash, 'San Francisco, CA', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80&auto=format&fit=crop']);
+  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['David Chen', 'david@patamatch.com', hash, 'Austin, TX', 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&q=80&auto=format&fit=crop']);
   await runQuery('INSERT INTO users (name, email, password_hash, city) VALUES ($1, $2, $3, $4)', ['Demo User', 'demo@patamatch.com', hash, 'CDMX']);
 
   // Pets
   const pets = [
-    ['Cooper', 'Perro', 'Beagle', '1.5 Años', 'Mediano', 'Portland, OR', 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_Urbt_th9z3ubslV9NUcaButvsJn3bjqulHDYDdhPaIrB6ttoasAYcOCkYNaAgRk_1uw_eCT0UBQ7VhEo6_6F5u4XDGtNvbRAYmoovCN44BxXBEGL0_mh7acSIapTtu49wqf97h-QueKTf050pgjbBk6cHSKZ-Pumc5q78UeJUBF0UCfexcs_BfPbPdvXR2J1tr_jMbLIwm7v27aGlwFdsZwGPgViwZMK2KO6i04PRqBJTWKjhOjdHb-E5rppiGfIQC81qpEOpr84', 'Urgente', 'primary', 'Beagle cariñoso, necesita hogar con jardín.', 0, ''],
-    ['Luna', 'Gato', 'Siamés', '3 Años', 'Pequeño', 'Seattle, WA', 'https://lh3.googleusercontent.com/aida-public/AB6AXuBI-QvpmYEchC8otadqV01ZDAEzyhbBcdg6wltHQrUukknU_rmUxArM-wSTj7uiZM2iJ2_-Ipb1kQnDT6dy7ZCYPEaLi0MNznbu9HBkIAP99irRKQYng6rcXZ5RB5KUuLdhX99OLOIjRp7O1Z-3I6yvM4naSX7dcgiP13VLiN18J0qkOOChiCninV2DZdA-DCZaihsfjlNYlMEn-uBBcyc98YTCb3Z4AhjFgQaM4FqPQZllTxrQu_hlJ-4pSH_1taBDcNM1ktmBmyBt', null, null, 'Tranquila e independiente, perfecta para apartamentos.', 0, ''],
-    ['Buddy', 'Perro', 'Golden Retriever', '4 Años', 'Grande', 'Austin, TX', 'https://lh3.googleusercontent.com/aida-public/AB6AXuAEx9z4sDgwlES6LhT2atZDYSpIdFU6jBHF8_JmDCJatBF8rO0sQQJLSDG8gZRmLBnISn4f2nR71iNTTZpV-N2qRjCcWF_tJtMh0IqkixPiL_BbAxqj5Y0AosAx6Ry8IxECZNlrLIO61hjIkq96CT2Iw0Oo5Ga1Qd-hWxEJAqvZZtG7u6dRx8sfKmCiag_gZLQD-TFjIQPDqw_1o-Y44gpi5GzvdgAFwmtboSZb7pNx9dFtTWkyg4pHTs8zJjforTlxWwgxyVct-rrG', null, null, 'Súper social, ama a los niños.', 0, ''],
-    ['Milo', 'Perro', 'Corgi', '6 Meses', 'Pequeño', 'Denver, CO', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCARRdvsssJGKMQol3bN9xYVJ2HpHbSU1zcdk7DsWgo47LijqEjFTuDnq6dvcSbCEByZYi_gIVZnufn33klKbGiw9wTUy9sQFZDh5M2ESkxc-bjXVyodZlhFY-YSbcxIFTzetEmfERILz1kWgb0sPz_Vc7MHyTH7Og_wYzRZF5uQKwtcngulZ-kvj2hSuqjX6Yyd4dZF_1oGcMri3kOLrXXXqdsTH6xFW6H5ud30WnxOo8y0-O7SjFIrU4Yq5VFBtnPu9AxE9NHxNg4', 'Recién Llegado', 'secondary', 'Cachorro corgi lleno de energía.', 0, '']
+    ['Cooper', 'Perro', 'Beagle', '1.5 Años', 'Mediano', 'Portland, OR', 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80&auto=format&fit=crop', 'Urgente', 'primary', 'Beagle cariñoso, necesita hogar con jardín.', 0, ''],
+    ['Luna', 'Gato', 'Siamés', '3 Años', 'Pequeño', 'Seattle, WA', 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?w=600&q=80&auto=format&fit=crop', null, null, 'Tranquila e independiente, perfecta para apartamentos.', 0, ''],
+    ['Buddy', 'Perro', 'Golden Retriever', '4 Años', 'Grande', 'Austin, TX', 'https://images.unsplash.com/photo-1602241628512-459cdd3234fe?w=600&q=80&auto=format&fit=crop', null, null, 'Súper social, ama a los niños.', 0, ''],
+    ['Milo', 'Perro', 'Corgi', '6 Meses', 'Pequeño', 'Denver, CO', 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=600&q=80&auto=format&fit=crop', 'Recién Llegado', 'secondary', 'Cachorro corgi lleno de energía.', 0, '']
   ];
   const adopted = [
-    ['Roco', 'Perro', 'Mestizo', '3 Años', 'Mediano', 'CDMX', 'https://lh3.googleusercontent.com/aida-public/AB6AXuAqRVeJibbG96lgappUgGzzKVBxaIZMuwQ7tR9vJcbOy1e_oVM4Iju4yyCRbmk-FIzuKF_2My7bndSa5sEMlJwx5fsFnn_vNjo6qYayqBuNrgyKpjkVyZ6nm3RFzCj6k_c2rt25_BW_fLSIwYWsO8ZDqJ-mCjLCGNiGzr-3CBpgIBy3vS787-JyJkGBJfy5sy-b3Zf8YPvP8vv_I_oE222fwubJMC25aC4T_ly6DOZlPfew2z-VKyDrZwoLI79oapCdmT8f6AvDaN4y', null, null, '', 1, '"Roco se convirtió en la alegría de nuestra casa..."'],
-    ['Bruno', 'Perro', 'Golden Retriever', '5 Años', 'Grande', 'Monterrey', 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYa11je97rmo9k-S5EbarYu2DOMbA0c-NsoNGy_zroBCUw1F_ruJgrRtvWVttZLRAtBdZO0_oGkHGLuRkZYvIWwWgYSu7wwWHLGbbb0Ncm9PG6GfCcIP3hr_VPHsBC5FmzmtNhhxqr2Vwj3VXwWzDZ8EhvloVah9f7zxpyQaPThNCiSyfvoXgNvwjJNz6XERiMqqtIA_a-OdzXG50GTISsYNmxu8M_MCVWJ8199ZvYsZAxG4aY4w7bGQejjwD8yww81LLsKV_MC23g', null, null, '', 1, '"Bruno nos motiva a salir y disfrutar la naturaleza todos los días."']
+    ['Roco', 'Perro', 'Mestizo', '3 Años', 'Mediano', 'CDMX', 'https://images.unsplash.com/photo-1596490634801-c536934af56e?w=600&q=80&auto=format&fit=crop', null, null, '', 1, '"Roco se convirtió en la alegría de nuestra casa..."'],
+    ['Bruno', 'Perro', 'Golden Retriever', '5 Años', 'Grande', 'Monterrey', 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=600&q=80&auto=format&fit=crop', null, null, '', 1, '"Bruno nos motiva a salir y disfrutar la naturaleza todos los días."']
   ];
 
   const allPets = [...pets, ...adopted];
@@ -331,8 +331,8 @@ async function seedDatabase() {
 
   // Lost pets
   const lostPets = [
-    ['Max', 'Caniche', 'Condesa, CDMX', 'Hace 3 horas', 'Caniche marrón con collar azul.', 'https://lh3.googleusercontent.com/aida-public/AB6AXuC-k9w6B6Agvn_GokB1U2lWlx4lNH10Zvt2mxH8thMIsFAFxcgFi1NC8ysn-mSXcofvYGZz7CUpBN_xpa5X3ciWX2Tp7PRHdgbeUjukYoDx-W1VCIGwY34YNgi6bd6Pgq4zTHpcUoUoSN564PExxlwC0MF28KjySeK30uxy8SiY3qMBd0xDr8sKmm1qwNKuqcTAIkUUcd0eBa-djzsfO8rB3DW7Wc5F_R6298bCqmr9kowk61yQdXHyY8zuD_FIyvaTFfQ7kKxQzNQ6', 'Urgente', '19.412', '-99.172', ''],
-    ['Baily', 'Golden Retriever', 'Sunset District, SF', 'Hace 2 horas', 'Golden Retriever macho.', 'https://lh3.googleusercontent.com/aida-public/AB6AXuABclrM0v1AEvpRpDqmx-u2ZPckcu9yR3yGeG1UFaNRbkq3DYo5x5e7y3HD-d6RWK3rK7d-VQvuVtieP_w4R7NShxtPCnTjeAd2mYuWL5RnT3baGp4qVA0SEgf9AmOmVen0hAoD_jdtNjSMfFzaVB4PTR79-weR2CzF_ClAV4PLh0RkbqZ3F2driQSpW4fllRQ5gm9FK03VESR9H9lyTjEo3f19rO5zaxA_BWI7zMM3nCB9J7QpNqM0sJtO5JEHP7lfR7hOmmV3gnzp', 'Urgente', '37.755', '-122.485', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVSBg-0VtLV-8_NqhcttgfYlMVlGLRDIvgGAOFQ0a5nUvg7FZyRL7rOxZBKVOV-2bWviVJGott1qxqPkRC_3IB6TQjqsquHNGuWjwzn4bp0YoRPA8_j191QNNHC4JQmcePxIfiXwRmoI97fFXAwvOMrFuZe4wFIOVpT3iu05JydVHLhm4uRi0xo5J_6qhU5nYPU5DIIG_obQxSUFrL8HU5uoqNiodOdH-RGifD0AJmlIZvOmgla5_CcOyfaEt7q3C_NFJXL-JzcZR1']
+    ['Max', 'Caniche', 'Condesa, CDMX', 'Hace 3 horas', 'Caniche marrón con collar azul.', 'https://images.unsplash.com/photo-1765739001803-9bc520b5b7ba?w=600&q=80&auto=format&fit=crop', 'Urgente', '19.412', '-99.172', ''],
+    ['Baily', 'Golden Retriever', 'Sunset District, SF', 'Hace 2 horas', 'Golden Retriever macho.', 'https://images.unsplash.com/photo-1693615774176-a5560f55ac49?w=600&q=80&auto=format&fit=crop', 'Urgente', '37.755', '-122.485', 'https://images.unsplash.com/photo-1693615774176-a5560f55ac49?w=100&q=80&auto=format&fit=crop']
   ];
   for (const lp of lostPets) {
     await runQuery('INSERT INTO lost_pets (name,breed,location,last_seen,description,image_url,badge,marker_top,marker_left,marker_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', lp);
@@ -347,7 +347,7 @@ async function seedDatabase() {
   await runQuery('INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)', [2, 1]);
 
   // Stories
-  await runQuery("INSERT INTO stories (pet_name,author_name,title,body,image_url,badge,is_approved,user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)", ['Luna', 'Familia Miller', 'El Nuevo Viaje de Luna', 'Después de 400 días en el refugio, Luna finalmente encontró a su familia ideal.', 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1lCw2wazjNlSAJL5l3K6uRU29AGXF888tnzcPVuq10TwjHjS1OcsD-qDFdjISl4X68wHQKg58ei811udJmHcHHFTvo6oHLiizaWx2Bkosy7-WzmeejC9bOc84WCKw8aUmEyKxfiLJCUqahva0WR0Uz887zI5V4MC2hsO1wj26R1N4cv8VD70AsvBSMCBtUxKf66QM8FEzSKnDIFKRzRwu_a4s1XRG_llbCh_OeEt6fRYzX_CEDSrBRNMee8DzL1DdsnRN_CkJ83Ev', 'Final Feliz', 1, 1]);
+  await runQuery("INSERT INTO stories (pet_name,author_name,title,body,image_url,badge,is_approved,user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)", ['Luna', 'Familia Miller', 'El Nuevo Viaje de Luna', 'Después de 400 días en el refugio, Luna finalmente encontró a su familia ideal.', 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?w=800&q=80&auto=format&fit=crop', 'Final Feliz', 1, 1]);
 
   console.log('✅ Database seeded!');
 }

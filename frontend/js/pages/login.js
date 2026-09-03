@@ -11,7 +11,7 @@ export function render() {
   <div class="hidden md:block relative h-full w-full overflow-hidden" id="login-image-side">
     <div class="absolute inset-0 bg-primary/10 mix-blend-multiply z-10"></div>
     <!-- Image carousel -->
-    <img id="login-carousel-img" alt="Mascotas adoptadas felices en su nuevo hogar" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6eZcnh3KOdgOwQEyYKyYmi78oBE3H-zSuyf2CN6P8Jcaoe6SQ5OK87D9IPx-SLZkIOaTL3FtWI8kRAFB8o0Mvi2L-f3GKGIq8_8WlVx_bFg8mt_GEwYmPjGjhl57AYqxFytnLxq8ezrXGGIfAsEevGNpn6cetEwqd98DwF2K_eMTgdFLsMWtyhQuZc257sZI4u9u1zoPbsb8mkRobM00AH19ImSS7-_d9q-R_tO3sgBF7od0DSpFCH7UdEjC1MZHTTnGFwxSfKTe3"/>
+    <img id="login-carousel-img" alt="Mascotas adoptadas felices en su nuevo hogar" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000" src="https://images.unsplash.com/photo-1537204696486-967f1b7198c8?w=1200&q=80&auto=format&fit=crop"/>
     <div class="absolute bottom-12 left-12 z-20 max-w-md">
       <div class="flex items-center gap-2 mb-4">
         <span class="material-symbols-outlined text-on-primary bg-primary p-2 rounded-full" style="font-variation-settings: 'FILL' 1;">pets</span>
@@ -234,15 +234,15 @@ export function init() {
   if (carouselImg) {
     const slides = [
       {
-        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC6eZcnh3KOdgOwQEyYKyYmi78oBE3H-zSuyf2CN6P8Jcaoe6SQ5OK87D9IPx-SLZkIOaTL3FtWI8kRAFB8o0Mvi2L-f3GKGIq8_8WlVx_bFg8mt_GEwYmPjGjhl57AYqxFytnLxq8ezrXGGIfAsEevGNpn6cetEwqd98DwF2K_eMTgdFLsMWtyhQuZc257sZI4u9u1zoPbsb8mkRobM00AH19ImSS7-_d9q-R_tO3sgBF7od0DSpFCH7UdEjC1MZHTTnGFwxSfKTe3',
+        img: 'https://images.unsplash.com/photo-1537204696486-967f1b7198c8?w=1200&q=80&auto=format&fit=crop',
         text: '¡Ellos ya iniciaron sesión en su nuevo hogar!'
       },
       {
-        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDLAWwbh2dJqSbgMgyaN5rFfW_6-bV1ea_HuGUxb81ZgWgeQEISoCGRRbWA7PDSVJbTDtKQAp61EYoUJ3arOsaClVsN3ngM_Fx-ymhpEhJDAyllDFNCf6Ehu60ev1lIqfCqKdEH401V-glzTnHHRloTifD05r2xgxDsXw3VHcsIH2ovGTFcJ5MA7t_Y0FnC-QmFJtmArw7TcdgwbN7dI_Vae2S7OSwnZK6cqtsqKxUhus2ZTOVoyT82oUi92IUcRlikzwNfqB8wDco8',
+        img: 'https://images.unsplash.com/photo-1655410037334-6155adce8241?w=1200&q=80&auto=format&fit=crop',
         text: 'Cada adopción es un nuevo comienzo lleno de amor.'
       },
       {
-        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBsv_-bz955vNS-tYr4oVaef0Z6_nafHn3UG0-V3szGOvTWx5iipBaWJDHxRIPZhJK_m5THdjoAmcdw1bhc7pix4hhtCfLnBOHo3iAEKUJvR74zpMbG6kSyHpqtL3Ivw1TG_8Cfk5kBAYwAaDNLlzyR8fcrP0HUtP0OJNPPd4mendTO8P-m7kfnkvBy08mxFPDm1aAkcBJt0gNmtoorUU_cBsOVhM1Zq7GQ26efg61BLInVDUkAxE0XRaMYIDfYC7A2xD62mCxkw7W8',
+        img: 'https://images.unsplash.com/photo-1718885433034-908d5bca08cf?w=1200&q=80&auto=format&fit=crop',
         text: 'Más de 2,000 familias ya encontraron a su compañero ideal.'
       }
     ];

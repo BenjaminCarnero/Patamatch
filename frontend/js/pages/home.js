@@ -39,7 +39,7 @@ export function render() {
       <div class="absolute -top-12 -right-12 w-64 h-64 bg-primary-fixed-dim rounded-full blur-3xl opacity-20"></div>
       <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-secondary-fixed rounded-full blur-3xl opacity-20"></div>
       <div class="relative rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white">
-        <img class="w-full h-[500px] object-cover" alt="Un golden retriever y un gato naranja sentados juntos en un hogar cálido" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsv_-bz955vNS-tYr4oVaef0Z6_nafHn3UG0-V3szGOvTWx5iipBaWJDHxRIPZhJK_m5THdjoAmcdw1bhc7pix4hhtCfLnBOHo3iAEKUJvR74zpMbG6kSyHpqtL3Ivw1TG_8Cfk5kBAYwAaDNLlzyR8fcrP0HUtP0OJNPPd4mendTO8P-m7kfnkvBy08mxFPDm1aAkcBJt0gNmtoorUU_cBsOVhM1Zq7GQ26efg61BLInVDUkAxE0XRaMYIDfYC7A2xD62mCxkw7W8"/>
+        <img class="w-full h-[500px] object-cover" alt="Un golden retriever y un gato naranja sentados juntos en un hogar cálido" src="https://images.unsplash.com/photo-1718885433034-908d5bca08cf?w=1200&q=80&auto=format&fit=crop"/>
         <div id="hero-notification" class="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 opacity-0 translate-y-4 transition-all duration-700">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
@@ -71,7 +71,7 @@ export function render() {
   <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter h-auto md:h-[600px]">
     <!-- Large Card -->
     <div class="md:col-span-2 md:row-span-2 relative group overflow-hidden rounded-2xl shadow-md bg-white border border-stone-100">
-      <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Caniche marrón en un parque" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-k9w6B6Agvn_GokB1U2lWlx4lNH10Zvt2mxH8thMIsFAFxcgFi1NC8ysn-mSXcofvYGZz7CUpBN_xpa5X3ciWX2Tp7PRHdgbeUjukYoDx-W1VCIGwY34YNgi6bd6Pgq4zTHpcUoUoSN564PExxlwC0MF28KjySeK30uxy8SiY3qMBd0xDr8sKmm1qwNKuqcTAIkUUcd0eBa-djzsfO8rB3DW7Wc5F_R6298bCqmr9kowk61yQdXHyY8zuD_FIyvaTFfQ7kKxQzNQ6"/>
+      <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Caniche marrón en un parque" src="https://images.unsplash.com/photo-1765739001803-9bc520b5b7ba?w=800&q=80&auto=format&fit=crop"/>
       <div class="absolute top-4 left-4 bg-error text-white px-3 py-1 rounded-full text-label-sm font-bold flex items-center gap-1 shadow-lg">
         <span class="material-symbols-outlined text-sm">emergency</span> URGENTE
       </div>
@@ -87,7 +87,7 @@ export function render() {
     </div>
     <!-- Secondary Cards -->
     <div class="md:col-span-1 relative group overflow-hidden rounded-2xl shadow-md bg-white border border-stone-100">
-      <img class="w-full h-48 object-cover" alt="Gato tuxedo blanco y negro" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Z5m13yXVd_P4vYD5HCw97JhKIEzNCVBO3vLyFLwL8ycsSMivv8Y8n_FD4wG2YlW9k6qVvGjGHft4EfmNTQYgZwi7L5BlkLhbDb1jqILj4x9IDaPSGr7s3-vMKAkP-hKS8grZOHuDWDSB37UH0sXObHDlnXW8yZMnyWq4E7wS2BLNdILDkFdRw_ErdJmKP9JSSYwvHaH5TvYGi_3mJeVXHEf70BwVQIyMTj1iCltDiQomVEi0_V4ZxVR5CAmGO2WCnqu-w9IiGDvn"/>
+      <img class="w-full h-48 object-cover" alt="Gato tuxedo blanco y negro" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80&auto=format&fit=crop"/>
       <div class="p-4">
         <div class="flex justify-between items-start mb-2">
           <h4 class="font-bold text-on-surface">Mimi</h4>
@@ -100,7 +100,7 @@ export function render() {
       </div>
     </div>
     <div class="md:col-span-1 relative group overflow-hidden rounded-2xl shadow-md bg-white border border-stone-100">
-      <img class="w-full h-48 object-cover" alt="Pequeño cachorro beagle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCasEOsRQxvZrY-Gkx88qU4EzuBdh-SXPSR57LZbkQMwV2hvTaHXkTqx7hTpsv3_U5cIkagNqrRiPHzzF83fKTKOPTv9dEHA477TnZd44vm5unFu-d2gEd4-pqTjnMQgWW8s9eLY-6lRmmYC3EqOpL6vLnuKZCPQlIQWXzqz6_BxTlRbH0mvXh0DNzCSkGGPkFmIYbNXVBDr-T7rjCyEndJcOaV97EM_I1LzG6M5bxbghRyXOAUj933TbkKtfPZLLHVlFbDNmZsewl0"/>
+      <img class="w-full h-48 object-cover" alt="Pequeño cachorro beagle" src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80&auto=format&fit=crop"/>
       <div class="p-4">
         <div class="flex justify-between items-start mb-2">
           <h4 class="font-bold text-on-surface">Toby</h4>
@@ -140,7 +140,7 @@ export function render() {
       <!-- Card 1 - Roco -->
       <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group">
         <div class="relative">
-          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Perro mestizo alegre con pañuelo rojo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqRVeJibbG96lgappUgGzzKVBxaIZMuwQ7tR9vJcbOy1e_oVM4Iju4yyCRbmk-FIzuKF_2My7bndSa5sEMlJwx5fsFnn_vNjo6qYayqBuNrgyKpjkVyZ6nm3RFzCj6k_c2rt25_BW_fLSIwYWsO8ZDqJ-mCjLCGNiGzr-3CBpgIBy3vS787-JyJkGBJfy5sy-b3Zf8YPvP8vv_I_oE222fwubJMC25aC4T_ly6DOZlPfew2z-VKyDrZwoLI79oapCdmT8f6AvDaN4y"/>
+          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Perro mestizo alegre con pañuelo rojo" src="https://images.unsplash.com/photo-1596490634801-c536934af56e?w=800&q=80&auto=format&fit=crop"/>
           <div class="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full text-primary cursor-pointer heart-toggle" data-pet="roco">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
           </div>
@@ -157,7 +157,7 @@ export function render() {
       <!-- Card 2 - Luna -->
       <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group">
         <div class="relative">
-          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Gato atigrado gris relajado" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmRaJx4Ybem1ob0QYUE4Ey1Q8O78KjoL3MouQIeQzoDDi9GL3NLI0t22VhSFQYvzf8KuxRsy283FU-7Ae9owvMjLWgqKvRvrOYQghWm0RDTX6WVebR2_iKlit3UdL6vlLmepTQoYAoNvzlFEBg9mZp7V7yO-50ybm75O0rWAJbqrufS2qrROqzg5P2O30X3djQjSUN83mdwHP3XDd_dc9qfVOuBtnIz1K0Wf1DNaHomWNqsMbzYnBm9tLk0ZqzUMejlc2AJNQ2gTpJ"/>
+          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Gato atigrado gris relajado" src="https://images.unsplash.com/photo-1559624989-7b9303bd9792?w=800&q=80&auto=format&fit=crop"/>
           <div class="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full text-primary cursor-pointer heart-toggle" data-pet="luna">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
           </div>
@@ -174,7 +174,7 @@ export function render() {
       <!-- Card 3 - Bruno -->
       <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group">
         <div class="relative">
-          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Golden retriever feliz corriendo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYa11je97rmo9k-S5EbarYu2DOMbA0c-NsoNGy_zroBCUw1F_ruJgrRtvWVttZLRAtBdZO0_oGkHGLuRkZYvIWwWgYSu7wwWHLGbbb0Ncm9PG6GfCcIP3hr_VPHsBC5FmzmtNhhxqr2Vwj3VXwWzDZ8EhvloVah9f7zxpyQaPThNCiSyfvoXgNvwjJNz6XERiMqqtIA_a-OdzXG50GTISsYNmxu8M_MCVWJ8199ZvYsZAxG4aY4w7bGQejjwD8yww81LLsKV_MC23g"/>
+          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Golden retriever feliz corriendo" src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=800&q=80&auto=format&fit=crop"/>
           <div class="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full text-primary cursor-pointer heart-toggle" data-pet="bruno">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
           </div>
@@ -191,7 +191,7 @@ export function render() {
       <!-- Card 4 - Milo -->
       <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group">
         <div class="relative">
-          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Cachorro salchicha en una cama" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT5GFmyUXbCWqiZbaitvqPo4AlckOteXNk4e9LzaNwGKhy6Y7FrKaWciL_ip_uxgJCHeYuo5d8NjrHD2N0jCpBp6jFbbs_xQw7wyhf60DL8eRuA3kxJWuDckLcVoDEBBPHAd8P8ZaEtm2Hcg6nrqNQwl8YeFAIxE-rl_gSOAfCgtH5QJ9Bv42k92hLTp1kPM1lmyhthmafMIQesqFSSA8Usd0qrdWekFS0de-iAdgXTw6CC1GI1N0Q3Eore30VCNqnDzN2oco7t52l"/>
+          <img class="w-full h-56 object-cover group-hover:scale-105 transition-transform" alt="Cachorro salchicha en una cama" src="https://images.unsplash.com/photo-1739016020843-25cf772f4e7b?w=800&q=80&auto=format&fit=crop"/>
           <div class="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full text-primary cursor-pointer heart-toggle" data-pet="milo">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
           </div>
@@ -240,7 +240,7 @@ export function render() {
     </div>
     <div class="lg:col-span-2 relative">
       <div class="rounded-3xl overflow-hidden border-8 border-white shadow-xl h-[450px]">
-        <img class="w-full h-full object-cover" alt="Mapa de vecindario urbano" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQnxYUUvc4CuUth5-0Q4n-syVUdXEdRypE-Q9oPQQIzamJXPQW-dS4m8et9hzOfnJuGYYTDznHsvwvSdpTREf3Jv7mFvrDfuOD_mGDXr6DlbOgvncaTEp5tdZObsG1Vcn3J2FKXqSM3-yYWLJmuGZ2C3exPrStxSVkkObIfwmVJbc42f7paMlx-L2Kuo53y7ToLv649_kvTZTgNzr3PN07AJwUIxgym7wdT51R6yd6aG9DxEfDD5mknSIaUYZqtB8sWZaxZf4U_099"/>
+        <img class="w-full h-full object-cover" alt="Mapa de vecindario urbano" src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=-99.19,19.39,-99.13,19.44&bboxSR=4326&size=900,675&format=png&f=image"/>
         <!-- Map Overlays -->
         <div class="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 group">
           <div class="relative">
@@ -262,7 +262,7 @@ export function render() {
         <div class="absolute bottom-6 left-6 right-6 md:right-auto md:w-80 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-white/20">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl overflow-hidden">
-              <img class="w-full h-full object-cover" alt="Miniatura de un perro perdido" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqqOCzZ3wA6TqlxXwndyHdKeE7DxQde2acP84BtBZoZsep1-UIhkOMcz-WpdGGKvLkFK2nA6ntv33DFTczmRlGEtPr5lcDE-gbX-vod5SJy1dcVLNVNWe5XkTNlDti2gQl1Z0ze7FC_Mr8vKITE_FUVKE494AVDJesoBpcf3dEqxrGNspJL28qUwiW1TBwjQG-U72-quAXEaA_-U9dnAGAa67geFtoiA5v4j0sdJIMPCcfeSYIeSWqOfD44DJDZtFosaBJ6NKzEzbq"/>
+              <img class="w-full h-full object-cover" alt="Miniatura de un perro perdido" src="https://images.unsplash.com/photo-1573828260583-ec780bbe0c1a?w=800&q=80&auto=format&fit=crop"/>
             </div>
             <div class="flex-1">
               <h4 class="text-sm font-bold">Última alerta cerca de ti</h4>

@@ -11,7 +11,7 @@ export function render() {
   <!-- Image Side (Desktop) -->
   <div class="hidden lg:block lg:w-1/2 relative overflow-hidden">
     <div class="absolute inset-0 bg-primary opacity-10 mix-blend-multiply z-10"></div>
-    <img class="absolute inset-0 w-full h-full object-cover" alt="Golden retriever y gato calico juntos en un hogar soleado" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLAWwbh2dJqSbgMgyaN5rFfW_6-bV1ea_HuGUxb81ZgWgeQEISoCGRRbWA7PDSVJbTDtKQAp61EYoUJ3arOsaClVsN3ngM_Fx-ymhpEhJDAyllDFNCf6Ehu60ev1lIqfCqKdEH401V-glzTnHHRloTifD05r2xgxDsXw3VHcsIH2ovGTFcJ5MA7t_Y0FnC-QmFJtmArw7TcdgwbN7dI_Vae2S7OSwnZK6cqtsqKxUhus2ZTOVoyT82oUi92IUcRlikzwNfqB8wDco8"/>
+    <img class="absolute inset-0 w-full h-full object-cover" alt="Golden retriever y gato calico juntos en un hogar soleado" src="https://images.unsplash.com/photo-1655410037334-6155adce8241?w=1200&q=80&auto=format&fit=crop"/>
     <div class="absolute inset-0 flex flex-col justify-end p-xl z-20 bg-gradient-to-t from-black/60 to-transparent">
       <div class="max-w-md">
         <h1 class="font-headline-xl text-white mb-md">Únete a la comunidad de PataMatch</h1>

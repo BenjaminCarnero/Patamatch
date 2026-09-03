@@ -201,6 +201,21 @@ async function initDatabase() {
     )
   `);
 
+  // Roles (RF-03): usuario = adoptante (por defecto), voluntario = se anota
+  // solo, refugio = organización verificada con backoffice, admin = equipo
+  // PataMatch, único que puede verificar refugios y moderar.
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'usuario'`);
+  // La restricción vive en la base y no solo en el código: si algún día se
+  // escribe desde otro lado, un rol inválido no puede entrar igual.
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_role_check') THEN
+        ALTER TABLE users ADD CONSTRAINT users_role_check
+          CHECK (role IN ('usuario', 'voluntario', 'refugio', 'admin'));
+      END IF;
+    END $$;
+  `);
+
   // Geolocation columns (RF-09: alertas por cercanía).
   // users.lat/lng = "mi zona", el punto que el usuario fija en su perfil.
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS lat NUMERIC`);
@@ -327,18 +342,20 @@ async function seedDatabase() {
   // Users — lat/lng es "mi zona" (el punto que el usuario fija en su perfil).
   // Los vecinos de CDMX están a distancias conocidas del punto donde se pierde
   // Max (19.412, -99.172) para poder demostrar el radio de alertas (RF-09).
+  // Los cuatro roles quedan representados para poder demostrarlos en la defensa.
   const users = [
-    ['Sarah Miller', 'sarah@patamatch.com', 'San Francisco, CA', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80&auto=format&fit=crop', 37.7749, -122.4194],
-    ['David Chen', 'david@patamatch.com', 'Austin, TX', 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&q=80&auto=format&fit=crop', 30.2672, -97.7431],
-    ['Demo User', 'demo@patamatch.com', 'CDMX', '', 19.4326, -99.1332],
-    ['Ana Torres', 'ana@patamatch.com', 'Condesa, CDMX', '', 19.4192, -99.172],   // ~0.8 km de Max
-    ['Luis Ramos', 'luis@patamatch.com', 'Roma Norte, CDMX', '', 19.412, -99.1491], // ~2.4 km de Max
-    ['Carla Díaz', 'carla@patamatch.com', 'Coyoacán, CDMX', '', 19.3312, -99.172]   // ~9 km de Max (fuera del radio)
+    ['Sarah Miller', 'sarah@patamatch.com', 'San Francisco, CA', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80&auto=format&fit=crop', 37.7749, -122.4194, 'refugio'],
+    ['David Chen', 'david@patamatch.com', 'Austin, TX', 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&q=80&auto=format&fit=crop', 30.2672, -97.7431, 'usuario'],
+    ['Demo User', 'demo@patamatch.com', 'CDMX', '', 19.4326, -99.1332, 'usuario'],
+    ['Ana Torres', 'ana@patamatch.com', 'Condesa, CDMX', '', 19.4192, -99.172, 'voluntario'],   // ~0.8 km de Max
+    ['Luis Ramos', 'luis@patamatch.com', 'Roma Norte, CDMX', '', 19.412, -99.1491, 'usuario'],  // ~2.4 km de Max
+    ['Carla Díaz', 'carla@patamatch.com', 'Coyoacán, CDMX', '', 19.3312, -99.172, 'usuario'],   // ~9 km de Max (fuera del radio)
+    ['Equipo PataMatch', 'admin@patamatch.com', 'Villa del Rosario, Córdoba', '', null, null, 'admin']
   ];
   for (const u of users) {
     await runQuery(
-      'INSERT INTO users (name, email, password_hash, city, avatar_url, lat, lng) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [u[0], u[1], hash, u[2], u[3], u[4], u[5]]
+      'INSERT INTO users (name, email, password_hash, city, avatar_url, lat, lng, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [u[0], u[1], hash, u[2], u[3], u[4], u[5], u[6]]
     );
   }
 

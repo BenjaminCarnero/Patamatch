@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { queryOne, runQuery } = require('../db/database');
-const { requireAuth, JWT_SECRET } = require('../middleware/auth');
+const { requireAuth, requireRole, ROLES, JWT_SECRET } = require('../middleware/auth');
 const { sanitizeHTML } = require('../middleware/sanitize');
 
 // POST /register
@@ -20,12 +20,14 @@ router.post('/register', async (req, res) => {
     }
 
     const password_hash = bcrypt.hashSync(password, 10);
+    // Sin columna `role` en el INSERT: todo registro nuevo queda como
+    // 'usuario' por el DEFAULT de la tabla, sin importar qué mande el cliente.
     const result = await runQuery(
       'INSERT INTO users (name, email, password_hash, city) VALUES (?, ?, ?, ?)',
       [sanitizeHTML(name), email, password_hash, sanitizeHTML(city)]
     );
 
-    const user = await queryOne('SELECT id, name, email, city, lat, lng, created_at FROM users WHERE id = ?', [result.lastInsertRowid]);
+    const user = await queryOne('SELECT id, name, email, city, role, lat, lng, created_at FROM users WHERE id = ?', [result.lastInsertRowid]);
     const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({ success: true, data: { token, user } });
@@ -67,7 +69,7 @@ router.post('/login', async (req, res) => {
 // GET /me
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await queryOne('SELECT id, name, email, city, avatar_url, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
+    const user = await queryOne('SELECT id, name, email, city, avatar_url, role, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
@@ -82,6 +84,8 @@ router.get('/me', requireAuth, async (req, res) => {
 // PUT /me
 router.put('/me', requireAuth, async (req, res) => {
   try {
+    // `role` se omite a propósito: un usuario no puede cambiarse el rol a sí
+    // mismo. Promover a refugio o admin es tarea del panel de administración.
     const { name, avatar_url, lat, lng } = req.body;
 
     if (!name) {
@@ -101,11 +105,50 @@ router.put('/me', requireAuth, async (req, res) => {
       );
     }
 
-    const user = await queryOne('SELECT id, name, email, city, avatar_url, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
+    const user = await queryOne('SELECT id, name, email, city, avatar_url, role, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
     res.json({ success: true, data: user });
   } catch (err) {
     console.error('Update me error:', err);
     res.status(500).json({ success: false, error: 'Failed to update user data' });
+  }
+});
+
+// PUT /users/:id/role — un admin cambia el rol de un usuario.
+// Es el mecanismo por el que un refugio queda verificado: sin este paso
+// cualquiera podría declararse refugio y recibir donaciones a su nombre.
+router.put('/users/:id/role', requireAuth, requireRole(ROLES.ADMIN), async (req, res) => {
+  try {
+    const { role } = req.body;
+    const targetId = Number(req.params.id);
+
+    if (!Object.values(ROLES).includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: `Rol inválido. Válidos: ${Object.values(ROLES).join(', ')}`
+      });
+    }
+
+    // Evita que el admin se quite el rol a sí mismo y deje el sistema sin nadie
+    // que pueda verificar refugios.
+    if (targetId === req.user.id && role !== ROLES.ADMIN) {
+      return res.status(400).json({
+        success: false,
+        error: 'No podés quitarte a vos mismo el rol de administrador'
+      });
+    }
+
+    const target = await queryOne('SELECT id FROM users WHERE id = ?', [targetId]);
+    if (!target) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
+    await runQuery('UPDATE users SET role = ? WHERE id = ?', [role, targetId]);
+
+    const user = await queryOne('SELECT id, name, email, city, role FROM users WHERE id = ?', [targetId]);
+    res.json({ success: true, data: user });
+  } catch (err) {
+    console.error('Cambiar rol error:', err);
+    res.status(500).json({ success: false, error: 'Failed to update role' });
   }
 });
 

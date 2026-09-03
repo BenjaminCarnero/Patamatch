@@ -47,6 +47,7 @@ app.use('/api/carnets', require('./routes/carnets'));
 app.use('/api/chats', require('./routes/chats'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/volunteers', require('./routes/volunteers'));
+app.use('/api/ai', require('./routes/ai'));
 
 // SPA fallback — serve index.html for non-API routes
 app.get('*', (req, res) => {

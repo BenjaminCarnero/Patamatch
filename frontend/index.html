@@ -293,6 +293,7 @@
 <!-- App Router & Shared Logic -->
 <script type="module">
     import * as api from './js/api.js';
+    import { montarAsistente } from './js/asistente.js';
 
     // ========== Global State ==========
     window.PataMatch = {
@@ -595,6 +596,9 @@
     
     // Initial navigation
     navigate();
+
+    // Asistente de adopción (RF-16): ventana flotante, disponible en todo el sitio.
+    montarAsistente();
 </script>
 
 </body>

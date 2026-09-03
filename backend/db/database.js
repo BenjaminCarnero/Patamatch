@@ -201,6 +201,88 @@ async function initDatabase() {
     )
   `);
 
+  // Voluntariado, centrado en hogares de tránsito: el cuello de botella real
+  // del rescate no es gente dispuesta a adoptar, es dónde alojar al animal
+  // mientras espera. Por eso la ficha no guarda "disponibilidad horaria" sino
+  // capacidad y qué tipo de animal puede recibir: alojar es 24/7 durante
+  // semanas, no una franja de un día.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS volunteers (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL UNIQUE,
+      phone TEXT DEFAULT '',
+      capacity INTEGER NOT NULL DEFAULT 1,
+      accepts_species TEXT NOT NULL DEFAULT 'ambos',
+      accepts_sizes TEXT NOT NULL DEFAULT '[]',
+      has_yard INTEGER DEFAULT 0,
+      has_other_pets INTEGER DEFAULT 0,
+      max_weeks INTEGER,
+      notes TEXT DEFAULT '',
+      is_active INTEGER DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `);
+
+  // Columnas agregadas después de la primera versión de la tabla.
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS capacity INTEGER NOT NULL DEFAULT 1`);
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS accepts_species TEXT NOT NULL DEFAULT 'ambos'`);
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS accepts_sizes TEXT NOT NULL DEFAULT '[]'`);
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS has_yard INTEGER DEFAULT 0`);
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS has_other_pets INTEGER DEFAULT 0`);
+  await pool.query(`ALTER TABLE volunteers ADD COLUMN IF NOT EXISTS max_weeks INTEGER`);
+
+  // Estadía de un animal en un hogar de tránsito. Es lo que ocupa cupo.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS foster_stays (
+      id SERIAL PRIMARY KEY,
+      volunteer_id INTEGER NOT NULL,
+      pet_id INTEGER NOT NULL,
+      created_by INTEGER NOT NULL,
+      start_date DATE DEFAULT CURRENT_DATE,
+      end_date DATE,
+      status TEXT NOT NULL DEFAULT 'activa',
+      notes TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (volunteer_id) REFERENCES volunteers(id),
+      FOREIGN KEY (pet_id) REFERENCES pets(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'foster_stays_status_check') THEN
+        ALTER TABLE foster_stays ADD CONSTRAINT foster_stays_status_check
+          CHECK (status IN ('activa', 'finalizada', 'cancelada'));
+      END IF;
+    END $$;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS volunteer_tasks (
+      id SERIAL PRIMARY KEY,
+      volunteer_id INTEGER,
+      created_by INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      task_date DATE,
+      status TEXT NOT NULL DEFAULT 'pendiente',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (volunteer_id) REFERENCES volunteers(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'volunteer_tasks_status_check') THEN
+        ALTER TABLE volunteer_tasks ADD CONSTRAINT volunteer_tasks_status_check
+          CHECK (status IN ('pendiente', 'aceptada', 'completada', 'cancelada'));
+      END IF;
+    END $$;
+  `);
+
   // Roles (RF-03): usuario = adoptante (por defecto), voluntario = se anota
   // solo, refugio = organización verificada con backoffice, admin = equipo
   // PataMatch, único que puede verificar refugios y moderar.
@@ -358,6 +440,15 @@ async function seedDatabase() {
       [u[0], u[1], hash, u[2], u[3], u[4], u[5], u[6]]
     );
   }
+
+  // Ana tiene rol 'voluntario', así que necesita su ficha de hogar de tránsito:
+  // sin esto el rol quedaría sin respaldo y el panel no la mostraría.
+  const ana = await queryOne('SELECT id FROM users WHERE email = $1', ['ana@patamatch.com']);
+  await runQuery(
+    `INSERT INTO volunteers (user_id, phone, capacity, accepts_species, accepts_sizes, has_yard, max_weeks, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [ana.id, '55-1234-5678', 2, 'ambos', JSON.stringify(['pequeno', 'mediano']), 1, 8, 'Departamento con patio, sin otras mascotas']
+  );
 
   // Pets
   const pets = [

@@ -204,3 +204,33 @@ export async function markAllNotificationsRead() {
   return request('PUT', '/notifications/read-all');
 }
 
+// ========== Voluntariado (hogares de tránsito) ==========
+export async function getMiHogar() {
+  return request('GET', '/volunteers/me');
+}
+
+export async function ofrecerHogar(data) {
+  return request('POST', '/volunteers', data);
+}
+
+export async function bajaHogar() {
+  return request('DELETE', '/volunteers/me');
+}
+
+// species y size filtran por los hogares con cupo que aceptan ese animal.
+export async function getHogares({ species, size } = {}) {
+  const qs = new URLSearchParams();
+  if (species) qs.set('species', species);
+  if (size) qs.set('size', size);
+  const query = qs.toString();
+  return request('GET', `/volunteers${query ? `?${query}` : ''}`);
+}
+
+export async function asignarTransito(data) {
+  return request('POST', '/volunteers/stays', data);
+}
+
+export async function cambiarEstadoTransito(id, status) {
+  return request('PUT', `/volunteers/stays/${id}/status`, { status });
+}
+

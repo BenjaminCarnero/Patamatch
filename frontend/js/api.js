@@ -204,6 +204,27 @@ export async function markAllNotificationsRead() {
   return request('PUT', '/notifications/read-all');
 }
 
+// ========== Donaciones ==========
+export async function getRefugios() {
+  return request('GET', '/donations/refugios');
+}
+
+export async function registrarDonacion(data) {
+  return request('POST', '/donations', data);
+}
+
+export async function getMisDonaciones() {
+  return request('GET', '/donations/mias');
+}
+
+export async function getDonacionesRecibidas() {
+  return request('GET', '/donations/recibidas');
+}
+
+export async function cambiarEstadoDonacion(id, estado) {
+  return request('PUT', `/donations/${id}/estado`, { estado });
+}
+
 // ========== Backoffice (gestión de publicaciones propias) ==========
 export async function getResumen() {
   return request('GET', '/backoffice/resumen');

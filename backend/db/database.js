@@ -201,6 +201,41 @@ async function initDatabase() {
     )
   `);
 
+  // Donaciones. No hay pasarela de pago —eso queda fuera del alcance del MVP—,
+  // así que el sistema registra y hace seguimiento, no cobra: la donación nace
+  // 'comprometida' y el refugio la marca 'recibida' cuando efectivamente llega.
+  // Es como funciona el seguimiento real de donaciones en especie, y evita
+  // simular un cobro que no ocurre.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS donations (
+      id SERIAL PRIMARY KEY,
+      donor_id INTEGER NOT NULL,
+      refugio_id INTEGER NOT NULL,
+      tipo TEXT NOT NULL,
+      monto NUMERIC,
+      descripcion TEXT DEFAULT '',
+      estado TEXT NOT NULL DEFAULT 'comprometida',
+      notas TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      recibida_at TIMESTAMP,
+      FOREIGN KEY (donor_id) REFERENCES users(id),
+      FOREIGN KEY (refugio_id) REFERENCES users(id)
+    )
+  `);
+
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'donations_tipo_check') THEN
+        ALTER TABLE donations ADD CONSTRAINT donations_tipo_check
+          CHECK (tipo IN ('dinero', 'especie'));
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'donations_estado_check') THEN
+        ALTER TABLE donations ADD CONSTRAINT donations_estado_check
+          CHECK (estado IN ('comprometida', 'recibida', 'cancelada'));
+      END IF;
+    END $$;
+  `);
+
   // Estado de la solicitud de adopción. El chat ya vincula mascota, adoptante y
   // dueño, así que es la solicitud: no hace falta una tabla aparte, solo darle
   // un estado que el refugio pueda aprobar o rechazar desde el backoffice.

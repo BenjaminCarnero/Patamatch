@@ -49,6 +49,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/volunteers', require('./routes/volunteers'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/backoffice', require('./routes/backoffice'));
+app.use('/api/donations', require('./routes/donations'));
 
 // SPA fallback — serve index.html for non-API routes
 app.get('*', (req, res) => {

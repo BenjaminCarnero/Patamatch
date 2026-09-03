@@ -1,4 +1,5 @@
-import { getResumen, getMisMascotas, getSolicitudes, resolverSolicitud, editarMascota, eliminarMascota } from '../api.js';
+import { getResumen, getMisMascotas, getSolicitudes, resolverSolicitud, editarMascota, eliminarMascota,
+         getDonacionesRecibidas, cambiarEstadoDonacion } from '../api.js';
 
 // Panel de gestión. Lo ve cualquier usuario logueado: en PataMatch cualquiera
 // puede dar una mascota en adopción, así que cualquiera necesita gestionar sus
@@ -32,9 +33,15 @@ export function render() {
             <div id="bo-solicitudes" class="space-y-3"></div>
         </div>
 
-        <div>
-            <h2 class="font-bold text-xl text-stone-800 mb-4">Mis publicaciones</h2>
-            <div id="bo-mascotas" class="space-y-3"></div>
+        <div class="mb-10">
+            <h2 class="font-bold text-xl text-stone-800 mb-1">Mis publicaciones</h2>
+            <div id="bo-mascotas" class="space-y-3 mt-4"></div>
+        </div>
+
+        <div id="bo-donaciones-bloque">
+            <h2 class="font-bold text-xl text-stone-800 mb-1">Donaciones recibidas</h2>
+            <p class="text-sm text-stone-500 mb-4">Los totales cuentan solo lo confirmado: una promesa todavía no es un aporte.</p>
+            <div id="bo-donaciones" class="space-y-3"></div>
         </div>
     </div>`;
 }
@@ -216,10 +223,79 @@ export function init() {
         }
     }
 
+    async function cargarDonaciones() {
+        const cont = $('bo-donaciones');
+        try {
+            const { data } = await getDonacionesRecibidas();
+
+            if (!data.donaciones.length) {
+                // Un usuario común sin refugio no recibe donaciones: en ese caso
+                // el bloque entero sobra y se oculta.
+                $('bo-donaciones-bloque').classList.add('hidden');
+                return;
+            }
+            $('bo-donaciones-bloque').classList.remove('hidden');
+
+            const r = data.resumen;
+            const etiqueta = {
+                comprometida: 'bg-orange-100 text-orange-700',
+                recibida: 'bg-green-100 text-green-700',
+                cancelada: 'bg-stone-100 text-stone-500'
+            };
+
+            cont.innerHTML = `
+                <div class="bg-white rounded-xl border border-stone-100 p-4 mb-4 flex flex-wrap gap-6">
+                    <div>
+                        <p class="text-2xl font-black text-green-600">$${r.total_dinero_recibido.toLocaleString('es-AR')}</p>
+                        <p class="text-[11px] text-stone-500 uppercase tracking-wide">Dinero recibido</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-black text-stone-800">${r.donaciones_en_especie_recibidas}</p>
+                        <p class="text-[11px] text-stone-500 uppercase tracking-wide">Aportes en especie</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-black ${r.comprometidas_pendientes ? 'text-[#D96C4A]' : 'text-stone-800'}">${r.comprometidas_pendientes}</p>
+                        <p class="text-[11px] text-stone-500 uppercase tracking-wide">Prometidas sin recibir</p>
+                    </div>
+                </div>
+            ` + data.donaciones.map(d => `
+                <div class="bg-white rounded-xl border border-stone-100 p-4 flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[160px]">
+                        <p class="font-semibold text-stone-800 text-sm">
+                            ${d.tipo === 'dinero' ? `$${Number(d.monto).toLocaleString('es-AR')}` : d.descripcion}
+                        </p>
+                        <p class="text-xs text-stone-500">
+                            De ${d.donor_name}${d.notas ? ' · ' + d.notas : ''}
+                        </p>
+                    </div>
+                    <span class="text-[11px] font-bold px-2 py-1 rounded-full ${etiqueta[d.estado]} shrink-0">${d.estado.toUpperCase()}</span>
+                    ${d.estado === 'comprometida' ? `
+                        <button data-recibida="${d.id}" class="bg-green-600 text-white text-xs font-semibold px-3 py-2 rounded-lg shrink-0">Confirmar recepción</button>
+                    ` : ''}
+                </div>`).join('');
+
+            cont.querySelectorAll('[data-recibida]').forEach(b =>
+                b.addEventListener('click', async () => {
+                    b.disabled = true;
+                    try {
+                        await cambiarEstadoDonacion(b.dataset.recibida, 'recibida');
+                        aviso('Donación confirmada', 'success');
+                        cargarDonaciones();
+                    } catch (err) {
+                        aviso(err.message, 'error');
+                        b.disabled = false;
+                    }
+                }));
+        } catch (err) {
+            $('bo-donaciones-bloque').classList.add('hidden');
+        }
+    }
+
     function refrescar() {
         cargarResumen();
         cargarSolicitudes();
         cargarMascotas();
+        cargarDonaciones();
     }
 
     refrescar();

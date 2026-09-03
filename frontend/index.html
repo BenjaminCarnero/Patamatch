@@ -524,19 +524,23 @@
                 }
                 
                 list.innerHTML = notifs.map(n => `
-                    <div class="p-3 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer border border-transparent hover:border-orange-100 ${n.is_read ? 'opacity-70' : 'bg-orange-50/50'}" data-notif-id="${n.id}">
-                        <p class="text-xs text-stone-800 ${n.is_read ? '' : 'font-semibold'}">${n.text}</p>
+                    <div class="p-3 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer border border-transparent hover:border-orange-100 ${n.is_read ? 'opacity-70' : 'bg-orange-50/50'}" data-notif-id="${n.id}" data-notif-type="${n.type || ''}">
+                        <p class="text-xs text-stone-800 ${n.is_read ? '' : 'font-semibold'}">
+                            ${n.type === 'lost_pet_nearby' ? '<span class="material-symbols-outlined text-[13px] align-middle text-error">pets</span> ' : ''}${n.text}
+                        </p>
                         <p class="text-[10px] text-stone-400 mt-1">${new Date(n.created_at).toLocaleString()}</p>
                     </div>
                 `).join('');
-                
+
                 // Add click events to notifications
                 list.querySelectorAll('[data-notif-id]').forEach(el => {
                     el.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         const id = el.getAttribute('data-notif-id');
+                        const type = el.getAttribute('data-notif-type');
                         await api.markNotificationRead(id);
-                        window.location.hash = 'chats';
+                        // Las alertas por cercanía llevan al mapa de perdidos; el resto al chat.
+                        window.location.hash = type === 'lost_pet_nearby' ? 'mascotas-perdidas' : 'chats';
                         loadNotifications();
                     });
                 });

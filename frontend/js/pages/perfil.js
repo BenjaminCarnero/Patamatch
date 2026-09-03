@@ -41,6 +41,24 @@ export function render() {
                             class="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-[#D96C4A] focus:border-[#D96C4A] transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#D96C4A]/10 file:text-[#D96C4A] hover:file:bg-[#D96C4A]/20 cursor-pointer" />
                         <p class="text-xs text-stone-500 mt-2">Sube una imagen desde tu computadora (JPG, PNG). Se adaptará automáticamente.</p>
                     </div>
+
+                    <div class="pt-2">
+                        <label class="block text-sm font-semibold text-stone-700 mb-2">Mi Zona</label>
+                        <p class="text-xs text-stone-500 mb-3">
+                            Haz clic en el mapa para marcar tu zona. Te avisaremos cuando se reporte
+                            una mascota perdida a menos de <strong>5 km</strong> de este punto.
+                        </p>
+                        <div id="zona-map" class="w-full h-64 rounded-xl border border-stone-200 overflow-hidden bg-stone-100"></div>
+                        <p id="zona-status" class="text-xs mt-2 ${user.lat ? 'text-stone-600' : 'text-amber-700'}">
+                            ${user.lat
+                                ? `Zona activa en ${Number(user.lat).toFixed(4)}, ${Number(user.lng).toFixed(4)}`
+                                : 'Todavía no fijaste tu zona — no vas a recibir alertas de mascotas perdidas.'}
+                        </p>
+                        <button type="button" id="usar-ubicacion-btn" class="mt-3 text-xs font-semibold text-[#D96C4A] hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">my_location</span>
+                            Usar mi ubicación actual
+                        </button>
+                    </div>
                 </div>
 
                 <div class="pt-6 border-t border-stone-100 flex justify-end gap-4">
@@ -66,6 +84,71 @@ export function init() {
     const saveBtn = document.getElementById('save-profile-btn');
 
     let currentBase64Avatar = user.avatar_url || '';
+
+    // ===== "Mi Zona": punto que define el centro del radio de alertas (RF-09) =====
+    let zonaLat = user.lat != null ? Number(user.lat) : null;
+    let zonaLng = user.lng != null ? Number(user.lng) : null;
+
+    const zonaStatus = document.getElementById('zona-status');
+    const zonaMap = L.map('zona-map', { zoomControl: true })
+        .setView([zonaLat ?? 19.4326, zonaLng ?? -99.1332], 12);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri'
+    }).addTo(zonaMap);
+
+    // El mapa se monta antes de ser visible en el SPA: hay que recalcular su
+    // tamaño y recién ahí encuadrar, o el fitBounds se calcula sobre 0x0 px.
+    setTimeout(() => {
+        zonaMap.invalidateSize();
+        if (zonaCirculo) zonaMap.fitBounds(zonaCirculo.getBounds().pad(0.1));
+    }, 100);
+
+    let zonaMarker = null;
+    let zonaCirculo = null;
+
+    function fijarZona(lat, lng, encuadrar = false) {
+        zonaLat = lat;
+        zonaLng = lng;
+
+        if (zonaMarker) zonaMap.removeLayer(zonaMarker);
+        if (zonaCirculo) zonaMap.removeLayer(zonaCirculo);
+
+        zonaMarker = L.marker([lat, lng]).addTo(zonaMap);
+        // El círculo hace visible el radio de 5 km que usa el backend. Va en un
+        // tono oscuro y punteado porque el naranja de marca se pierde sobre las
+        // calles del mapa, que ya son naranjas.
+        zonaCirculo = L.circle([lat, lng], {
+            radius: 5000,
+            color: '#7C2D12',
+            fillColor: '#D96C4A',
+            fillOpacity: 0.15,
+            weight: 3,
+            dashArray: '6 6'
+        }).addTo(zonaMap);
+
+        // Encuadrar al círculo garantiza que el radio siempre se vea completo,
+        // sin depender de un nivel de zoom fijo.
+        if (encuadrar) zonaMap.fitBounds(zonaCirculo.getBounds().pad(0.1));
+
+        zonaStatus.textContent = `Zona activa en ${lat.toFixed(4)}, ${lng.toFixed(4)} — radio de 5 km`;
+        zonaStatus.className = 'text-xs mt-2 text-stone-600';
+    }
+
+    if (zonaLat != null && zonaLng != null) fijarZona(zonaLat, zonaLng);
+
+    zonaMap.on('click', (e) => fijarZona(e.latlng.lat, e.latlng.lng));
+
+    document.getElementById('usar-ubicacion-btn')?.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            window.PataMatch.toast('Tu navegador no soporta geolocalización', 'error');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => fijarZona(pos.coords.latitude, pos.coords.longitude, /* encuadrar */ true),
+            () => window.PataMatch.toast('No se pudo obtener tu ubicación', 'error')
+        );
+    });
 
     // File input handler with resize
     avatarInput.addEventListener('change', (e) => {
@@ -131,7 +214,12 @@ export function init() {
         saveBtn.disabled = true;
 
         try {
-            const res = await updateProfile({ name, avatar_url: currentBase64Avatar });
+            const res = await updateProfile({
+                name,
+                avatar_url: currentBase64Avatar,
+                lat: zonaLat,
+                lng: zonaLng
+            });
             if (res.success) {
                 // Update local state
                 window.PataMatch.user = { ...window.PataMatch.user, ...res.data };

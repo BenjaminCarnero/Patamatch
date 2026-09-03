@@ -201,6 +201,24 @@ async function initDatabase() {
     )
   `);
 
+  // Geolocation columns (RF-09: alertas por cercanía).
+  // users.lat/lng = "mi zona", el punto que el usuario fija en su perfil.
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS lat NUMERIC`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS lng NUMERIC`);
+
+  // lost_pets.marker_top/marker_left guardaban lat/lng como TEXT, con nombres
+  // heredados de un diseño viejo (posicionar un pin en % sobre una imagen).
+  // Se migran a columnas numéricas reales para poder calcular distancias.
+  await pool.query(`ALTER TABLE lost_pets ADD COLUMN IF NOT EXISTS lat NUMERIC`);
+  await pool.query(`ALTER TABLE lost_pets ADD COLUMN IF NOT EXISTS lng NUMERIC`);
+  await pool.query(`
+    UPDATE lost_pets
+    SET lat = marker_top::NUMERIC, lng = marker_left::NUMERIC
+    WHERE lat IS NULL
+      AND marker_top ~ '^-?[0-9]+(\\.[0-9]+)?$'
+      AND marker_left ~ '^-?[0-9]+(\\.[0-9]+)?$'
+  `);
+
   // Seed if empty
   const res = await pool.query('SELECT COUNT(*) as count FROM users');
   const count = parseInt(res.rows[0].count, 10);
@@ -306,10 +324,23 @@ async function seedDatabase() {
 
   const hash = bcrypt.hashSync('demo123', 10);
 
-  // Users
-  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['Sarah Miller', 'sarah@patamatch.com', hash, 'San Francisco, CA', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80&auto=format&fit=crop']);
-  await runQuery('INSERT INTO users (name, email, password_hash, city, avatar_url) VALUES ($1, $2, $3, $4, $5)', ['David Chen', 'david@patamatch.com', hash, 'Austin, TX', 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&q=80&auto=format&fit=crop']);
-  await runQuery('INSERT INTO users (name, email, password_hash, city) VALUES ($1, $2, $3, $4)', ['Demo User', 'demo@patamatch.com', hash, 'CDMX']);
+  // Users — lat/lng es "mi zona" (el punto que el usuario fija en su perfil).
+  // Los vecinos de CDMX están a distancias conocidas del punto donde se pierde
+  // Max (19.412, -99.172) para poder demostrar el radio de alertas (RF-09).
+  const users = [
+    ['Sarah Miller', 'sarah@patamatch.com', 'San Francisco, CA', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80&auto=format&fit=crop', 37.7749, -122.4194],
+    ['David Chen', 'david@patamatch.com', 'Austin, TX', 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=300&q=80&auto=format&fit=crop', 30.2672, -97.7431],
+    ['Demo User', 'demo@patamatch.com', 'CDMX', '', 19.4326, -99.1332],
+    ['Ana Torres', 'ana@patamatch.com', 'Condesa, CDMX', '', 19.4192, -99.172],   // ~0.8 km de Max
+    ['Luis Ramos', 'luis@patamatch.com', 'Roma Norte, CDMX', '', 19.412, -99.1491], // ~2.4 km de Max
+    ['Carla Díaz', 'carla@patamatch.com', 'Coyoacán, CDMX', '', 19.3312, -99.172]   // ~9 km de Max (fuera del radio)
+  ];
+  for (const u of users) {
+    await runQuery(
+      'INSERT INTO users (name, email, password_hash, city, avatar_url, lat, lng) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [u[0], u[1], hash, u[2], u[3], u[4], u[5]]
+    );
+  }
 
   // Pets
   const pets = [
@@ -335,7 +366,11 @@ async function seedDatabase() {
     ['Baily', 'Golden Retriever', 'Sunset District, SF', 'Hace 2 horas', 'Golden Retriever macho.', 'https://images.unsplash.com/photo-1693615774176-a5560f55ac49?w=600&q=80&auto=format&fit=crop', 'Urgente', '37.755', '-122.485', 'https://images.unsplash.com/photo-1693615774176-a5560f55ac49?w=100&q=80&auto=format&fit=crop']
   ];
   for (const lp of lostPets) {
-    await runQuery('INSERT INTO lost_pets (name,breed,location,last_seen,description,image_url,badge,marker_top,marker_left,marker_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', lp);
+    // marker_top/marker_left se mantienen sincronizadas con lat/lng por compatibilidad.
+    await runQuery(
+      'INSERT INTO lost_pets (name,breed,location,last_seen,description,image_url,badge,marker_top,marker_left,marker_image,lat,lng) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
+      [...lp, Number(lp[7]), Number(lp[8])]
+    );
   }
 
   // Posts

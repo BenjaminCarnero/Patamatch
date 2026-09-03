@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
       [sanitizeHTML(name), email, password_hash, sanitizeHTML(city)]
     );
 
-    const user = await queryOne('SELECT id, name, email, city, created_at FROM users WHERE id = ?', [result.lastInsertRowid]);
+    const user = await queryOne('SELECT id, name, email, city, lat, lng, created_at FROM users WHERE id = ?', [result.lastInsertRowid]);
     const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({ success: true, data: { token, user } });
@@ -67,7 +67,7 @@ router.post('/login', async (req, res) => {
 // GET /me
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await queryOne('SELECT id, name, email, city, avatar_url, created_at FROM users WHERE id = ?', [req.user.id]);
+    const user = await queryOne('SELECT id, name, email, city, avatar_url, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
@@ -82,7 +82,7 @@ router.get('/me', requireAuth, async (req, res) => {
 // PUT /me
 router.put('/me', requireAuth, async (req, res) => {
   try {
-    const { name, avatar_url } = req.body;
+    const { name, avatar_url, lat, lng } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, error: 'Name is required' });
@@ -93,7 +93,15 @@ router.put('/me', requireAuth, async (req, res) => {
       [sanitizeHTML(name), avatar_url || '', req.user.id]
     );
 
-    const user = await queryOne('SELECT id, name, email, city, avatar_url, created_at FROM users WHERE id = ?', [req.user.id]);
+    // "Mi zona" (RF-09): solo se actualiza si el usuario fijó un punto en el mapa.
+    if (lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))) {
+      await runQuery(
+        'UPDATE users SET lat = ?, lng = ? WHERE id = ?',
+        [Number(lat), Number(lng), req.user.id]
+      );
+    }
+
+    const user = await queryOne('SELECT id, name, email, city, avatar_url, lat, lng, created_at FROM users WHERE id = ?', [req.user.id]);
     res.json({ success: true, data: user });
   } catch (err) {
     console.error('Update me error:', err);

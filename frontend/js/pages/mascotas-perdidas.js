@@ -298,8 +298,10 @@ export async function init() {
         leafletMarkers = {};
 
         pets.forEach(pet => {
-          let lat = parseFloat(pet.marker_top);
-          let lng = parseFloat(pet.marker_left);
+          // lat/lng son las columnas numéricas; marker_top/left quedan como
+          // respaldo de los reportes viejos anteriores a la migración.
+          let lat = parseFloat(pet.lat ?? pet.marker_top);
+          let lng = parseFloat(pet.lng ?? pet.marker_left);
           if (isNaN(lat) || isNaN(lng)) {
             lat = 19.4326 + (Math.random() - 0.5) * 0.05;
             lng = -99.1332 + (Math.random() - 0.5) * 0.05;

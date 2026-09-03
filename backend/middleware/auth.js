@@ -34,6 +34,22 @@ function optionalAuth(req, res, next) {
   next();
 }
 
+// Deja el rol disponible en req.user sin restringir el acceso. Se usa cuando lo
+// que decide el permiso es ser dueño del recurso, y el rol solo cambia el
+// alcance: un usuario ve lo suyo, un admin ve todo.
+async function attachRole(req, res, next) {
+  try {
+    const { queryOne } = require('../db/database');
+    const user = await queryOne('SELECT role FROM users WHERE id = ?', [req.user.id]);
+    req.user.role = user ? user.role : ROLES.USUARIO;
+    next();
+  } catch (err) {
+    console.error('Error leyendo rol:', err);
+    req.user.role = ROLES.USUARIO;
+    next();
+  }
+}
+
 // Restringe una ruta a ciertos roles. Se usa después de requireAuth:
 //   router.get('/panel', requireAuth, requireRole(ROLES.REFUGIO, ROLES.ADMIN), ...)
 //
@@ -68,4 +84,4 @@ function requireRole(...rolesPermitidos) {
   };
 }
 
-module.exports = { requireAuth, optionalAuth, requireRole, ROLES, JWT_SECRET };
+module.exports = { requireAuth, optionalAuth, requireRole, attachRole, ROLES, JWT_SECRET };

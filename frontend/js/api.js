@@ -204,6 +204,31 @@ export async function markAllNotificationsRead() {
   return request('PUT', '/notifications/read-all');
 }
 
+// ========== Backoffice (gestión de publicaciones propias) ==========
+export async function getResumen() {
+  return request('GET', '/backoffice/resumen');
+}
+
+export async function getMisMascotas() {
+  return request('GET', '/backoffice/mascotas');
+}
+
+export async function getSolicitudes() {
+  return request('GET', '/backoffice/solicitudes');
+}
+
+export async function resolverSolicitud(id, status) {
+  return request('PUT', `/backoffice/solicitudes/${id}`, { status });
+}
+
+export async function editarMascota(id, data) {
+  return request('PUT', `/pets/${id}`, data);
+}
+
+export async function eliminarMascota(id) {
+  return request('DELETE', `/pets/${id}`);
+}
+
 // ========== Voluntariado (hogares de tránsito) ==========
 export async function getMiHogar() {
   return request('GET', '/volunteers/me');

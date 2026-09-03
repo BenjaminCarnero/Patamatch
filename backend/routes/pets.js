@@ -85,6 +85,80 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
+// Solo el dueño de la publicación puede tocarla. El admin también, para poder
+// moderar contenido inapropiado sin depender de que el dueño lo borre.
+async function puedeEditar(pet, user) {
+  if (pet.user_id === user.id) return true;
+  const { role } = await queryOne('SELECT role FROM users WHERE id = ?', [user.id]) || {};
+  return role === 'admin';
+}
+
+// PUT /:id — editar una publicación
+router.put('/:id', requireAuth, async (req, res) => {
+  try {
+    const pet = await queryOne('SELECT * FROM pets WHERE id = ?', [req.params.id]);
+    if (!pet) {
+      return res.status(404).json({ success: false, error: 'Mascota no encontrada' });
+    }
+
+    if (!await puedeEditar(pet, req.user)) {
+      return res.status(403).json({ success: false, error: 'Solo podés editar tus propias publicaciones' });
+    }
+
+    const { name, species, breed, age, size, location, image_url, description } = req.body;
+    if (!name || !species) {
+      return res.status(400).json({ success: false, error: 'El nombre y la especie son obligatorios' });
+    }
+
+    await runQuery(
+      `UPDATE pets SET name = ?, species = ?, breed = ?, age = ?, size = ?,
+       location = ?, image_url = ?, description = ? WHERE id = ?`,
+      [name, species, breed || null, age || null, size || null, location || null,
+       image_url || pet.image_url, description || null, req.params.id]
+    );
+
+    const actualizada = await queryOne('SELECT * FROM pets WHERE id = ?', [req.params.id]);
+    res.json({ success: true, data: actualizada });
+  } catch (err) {
+    console.error('Editar mascota error:', err);
+    res.status(500).json({ success: false, error: 'Failed to update pet' });
+  }
+});
+
+// DELETE /:id — dar de baja una publicación
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const pet = await queryOne('SELECT * FROM pets WHERE id = ?', [req.params.id]);
+    if (!pet) {
+      return res.status(404).json({ success: false, error: 'Mascota no encontrada' });
+    }
+
+    if (!await puedeEditar(pet, req.user)) {
+      return res.status(403).json({ success: false, error: 'Solo podés eliminar tus propias publicaciones' });
+    }
+
+    // No se puede borrar una mascota que está alojada en un hogar de tránsito:
+    // hay una persona real cuidándola y su estadía quedaría huérfana.
+    const enTransito = await queryOne(
+      "SELECT id FROM foster_stays WHERE pet_id = ? AND status = 'activa'", [req.params.id]
+    );
+    if (enTransito) {
+      return res.status(409).json({
+        success: false,
+        error: 'Esta mascota está en un hogar de tránsito. Finalizá el tránsito antes de dar de baja la publicación.'
+      });
+    }
+
+    await runQuery('DELETE FROM favorites WHERE pet_id = ?', [req.params.id]);
+    await runQuery('DELETE FROM pets WHERE id = ?', [req.params.id]);
+
+    res.json({ success: true, message: 'Publicación eliminada' });
+  } catch (err) {
+    console.error('Eliminar mascota error:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete pet' });
+  }
+});
+
 // POST /:id/adopt — create adoption request / chat
 router.post('/:id/adopt', requireAuth, async (req, res) => {
   try {

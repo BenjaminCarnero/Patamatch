@@ -201,6 +201,19 @@ async function initDatabase() {
     )
   `);
 
+  // Estado de la solicitud de adopción. El chat ya vincula mascota, adoptante y
+  // dueño, así que es la solicitud: no hace falta una tabla aparte, solo darle
+  // un estado que el refugio pueda aprobar o rechazar desde el backoffice.
+  await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pendiente'`);
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chats_status_check') THEN
+        ALTER TABLE chats ADD CONSTRAINT chats_status_check
+          CHECK (status IN ('pendiente', 'aprobada', 'rechazada'));
+      END IF;
+    END $$;
+  `);
+
   // Voluntariado, centrado en hogares de tránsito: el cuello de botella real
   // del rescate no es gente dispuesta a adoptar, es dónde alojar al animal
   // mientras espera. Por eso la ficha no guarda "disponibilidad horaria" sino

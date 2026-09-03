@@ -264,8 +264,8 @@ export async function init() {
 
   // Initialize Leaflet Map
   leafletMap = L.map('leaflet-map-container', { zoomControl: false }).setView([19.4326, -99.1332], 13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom'
   }).addTo(leafletMap);
   L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
 

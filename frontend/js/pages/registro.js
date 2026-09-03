@@ -1,4 +1,5 @@
 import * as api from '../api.js?v=4';
+import { cities } from '../cities.js';
 
 export function render() {
   // Register is a full-page layout — signal the router to hide nav/footer
@@ -296,14 +297,6 @@ export function init() {
   // ========== City Autocomplete ==========
   const cityInput = document.getElementById('reg-city');
   const citySuggestions = document.getElementById('city-suggestions');
-
-  const cities = [
-    'Ciudad de México', 'Guadalajara', 'Monterrey', 'Puebla', 'Querétaro', 'Cancún', 'Mérida', 'León', 'Tijuana', 'Oaxaca',
-    'Toluca', 'Aguascalientes', 'San Luis Potosí', 'Morelia', 'Chihuahua', 'Veracruz', 'Hermosillo', 'Saltillo', 'Villahermosa',
-    'Buenos Aires', 'Córdoba', 'Rosario', 'Mendoza', 'Bogotá', 'Medellín', 'Cali', 'Lima', 'Santiago', 'Valparaiso',
-    'São Paulo', 'Río de Janeiro', 'Quito', 'Guayaquil', 'Caracas', 'Montevideo', 'Asunción', 'La Paz', 'San José',
-    'Panamá', 'San Salvador', 'Guatemala', 'Tegucigalpa', 'Managua', 'Santo Domingo', 'La Habana'
-  ];
 
   if (cityInput && citySuggestions) {
     cityInput.addEventListener('input', () => {

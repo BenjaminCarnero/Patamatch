@@ -1,4 +1,5 @@
 import * as api from '../api.js?v=4';
+import { ESTADOS_SALUD, buildCartelEstado, abrirCarnetMascota } from '../carnet-mascota.js?v=1';
 
 function buildPetCard(pet) {
   const badgeHtml = pet.badge
@@ -11,8 +12,9 @@ function buildPetCard(pet) {
   return `
     <div class="pet-card group bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/20 overflow-hidden hover:shadow-md transition-shadow duration-300" data-species="${pet.species}" data-id="${pet.id}">
       <div class="relative h-64 overflow-hidden">
-        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${pet.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${pet.name}" />
+        <img class="pet-photo w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer" src="${pet.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${pet.name}" title="Tocá la foto para ver el carnet digital de ${pet.name}" data-pet-id="${pet.id}" />
         ${badgeHtml}
+        ${buildCartelEstado(pet)}
         <button class="fav-btn absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full ${favClass} hover:bg-primary hover:text-on-primary transition-all shadow-sm" data-pet-id="${pet.id}" data-favorited="${favFilled}">
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' ${favFilled ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24;">favorite</span>
         </button>
@@ -93,6 +95,18 @@ export function render() {
         <label class="block font-label-sm text-on-surface-variant mb-1">Ubicación</label>
         <input id="pub-location" class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary transition-all" type="text" required />
       </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block font-label-sm text-on-surface-variant mb-1">Estado de salud</label>
+          <select id="pub-health" class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+            ${Object.entries(ESTADOS_SALUD).map(([v, e]) => `<option value="${v}">${e.label}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="block font-label-sm text-on-surface-variant mb-1">Nota (opcional)</label>
+          <input id="pub-health-note" class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary transition-all" type="text" placeholder="Ej: castrado el 15/9, reposo 2 semanas" />
+        </div>
+      </div>
       <div class="flex flex-col">
         <label class="block font-label-sm text-on-surface-variant mb-1">Foto de la Mascota</label>
         <div id="pub-img-container" class="relative group border-2 border-dashed border-outline-variant hover:border-primary rounded-xl p-4 transition-all bg-surface-container-lowest flex flex-col items-center justify-center cursor-pointer min-h-[96px]">
@@ -137,7 +151,7 @@ export function render() {
 
   <!-- Search & Filters Container -->
   <section class="bg-surface-container-low rounded-2xl p-6 mb-12 shadow-sm border border-outline-variant/30">
-    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
       <div class="md:col-span-1 lg:col-span-1">
         <label class="block font-label-sm text-on-surface-variant mb-2">Ubicación</label>
         <div class="relative">
@@ -172,6 +186,13 @@ export function render() {
           <option value="Mediano">Mediano</option>
           <option value="Grande">Grande</option>
           <option value="Extra Grande">Extra Grande</option>
+        </select>
+      </div>
+      <div>
+        <label class="block font-label-sm text-on-surface-variant mb-2">Estado</label>
+        <select id="filter-health" class="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none cursor-pointer">
+          <option value="">Cualquier estado</option>
+          ${Object.entries(ESTADOS_SALUD).map(([v, e]) => `<option value="${v}">${e.label}</option>`).join('')}
         </select>
       </div>
       <div class="flex items-end">
@@ -255,8 +276,11 @@ export async function init() {
       const size = document.getElementById('filter-size').value;
       // const age = document.getElementById('filter-age').value; // if implemented in backend
 
+      const health = document.getElementById('filter-health').value;
+
       const filters = { is_adopted: 0 };
       if (species) filters.species = species;
+      if (health) filters.health_status = health;
       if (size && size !== '') {
         // extract first word for size mapping if necessary, or just send it
         filters.size = size.split(' ')[0]; 
@@ -311,6 +335,11 @@ export async function init() {
       });
     });
 
+    // La foto del animal abre su carnet digital — público, no pide sesión
+    petGrid.querySelectorAll('.pet-photo').forEach(img => {
+      img.addEventListener('click', () => abrirCarnetMascota(img.getAttribute('data-pet-id')));
+    });
+
     // Adopt buttons
     petGrid.querySelectorAll('.adopt-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -334,6 +363,7 @@ export async function init() {
   document.getElementById('filter-search-btn')?.addEventListener('click', loadPets);
   document.getElementById('filter-species')?.addEventListener('change', loadPets);
   document.getElementById('filter-size')?.addEventListener('change', loadPets);
+  document.getElementById('filter-health')?.addEventListener('change', loadPets);
 
   // Advanced filters toggle
   const advSection = document.getElementById('advanced-filters-section');
@@ -443,6 +473,8 @@ export async function init() {
       location: document.getElementById('pub-location').value,
       image_url: pubImageBase64,
       description: document.getElementById('pub-desc').value,
+      health_status: document.getElementById('pub-health').value,
+      health_note: document.getElementById('pub-health-note').value,
       badge: 'Nuevo',
       badge_color: 'secondary'
     };
@@ -453,6 +485,8 @@ export async function init() {
         window.PataMatch.toast('¡Mascota publicada exitosamente!', 'success');
         closeModal();
         loadPets(); // reload grid
+        // El carnet se carga desde el panel; se le avisa para que no quede sin datos médicos.
+        setTimeout(() => window.PataMatch.toast('Cargá su carnet digital desde tu Panel de Gestión', 'info'), 1200);
       }
     } catch (err) {
       window.PataMatch.toast(err.message || 'Error al publicar mascota', 'error');

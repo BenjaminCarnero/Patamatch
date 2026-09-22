@@ -43,6 +43,12 @@ export function render() {
             </p>
         </div>
 
+        <a href="#refugios" class="flex items-center gap-3 bg-white border border-stone-100 rounded-xl p-4 mb-8 hover:border-[#D96C4A]/50 transition-colors">
+            <span class="material-symbols-outlined text-[#D96C4A]">map</span>
+            <span class="flex-1 text-sm text-stone-700">¿No sabés a cuál donar? <strong>Mirá los refugios en el mapa</strong> y cuántas mascotas tiene cada uno.</span>
+            <span class="material-symbols-outlined text-stone-400">chevron_right</span>
+        </a>
+
         <form id="don-form" class="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5 mb-10">
             <div>
                 <label class="block text-sm font-semibold text-stone-700 mb-2">¿A qué refugio?</label>

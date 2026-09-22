@@ -46,6 +46,90 @@ router.get('/resumen', ...soloGestores, async (req, res) => {
   }
 });
 
+// Los últimos N meses como 'YYYY-MM', del más viejo al actual. Se generan acá
+// y no en SQL para que los meses sin actividad aparezcan igual con cero.
+function ultimosMeses(n) {
+  const meses = [];
+  const hoy = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return meses;
+}
+
+// GET /estadisticas — datos para los gráficos del panel. Mismo alcance que el
+// resumen: un refugio ve lo suyo, el admin todo el sistema.
+router.get('/estadisticas', ...soloGestores, async (req, res) => {
+  try {
+    const mias = esAdmin(req) ? '' : ' AND p.user_id = ?';
+    const params = esAdmin(req) ? [] : [req.user.id];
+    const meses = ultimosMeses(6);
+    const desde = `${meses[0]}-01`;
+
+    const [especies, salud, solicitudes, pubsPorMes, solPorMes, carnets, transitos] = await Promise.all([
+      queryAll(`SELECT p.species AS especie, COUNT(*) AS n FROM pets p WHERE 1=1${mias}
+                GROUP BY p.species ORDER BY n DESC`, params),
+      queryAll(`SELECT p.health_status AS estado, COUNT(*) AS n FROM pets p
+                WHERE p.is_adopted = 0${mias} GROUP BY p.health_status`, params),
+      queryAll(`SELECT c.status AS estado, COUNT(*) AS n FROM chats c JOIN pets p ON p.id = c.pet_id
+                WHERE 1=1${mias} GROUP BY c.status`, params),
+      queryAll(`SELECT to_char(p.created_at, 'YYYY-MM') AS mes, COUNT(*) AS n FROM pets p
+                WHERE p.created_at >= ?::date${mias} GROUP BY mes`, [desde, ...params]),
+      queryAll(`SELECT to_char(c.created_at, 'YYYY-MM') AS mes, COUNT(*) AS n
+                FROM chats c JOIN pets p ON p.id = c.pet_id
+                WHERE c.created_at >= ?::date${mias} GROUP BY mes`, [desde, ...params]),
+      queryOne(`SELECT COUNT(*) AS total,
+                       COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM pet_carnets pc WHERE pc.pet_id = p.id)) AS con_carnet
+                FROM pets p WHERE p.is_adopted = 0${mias}`, params),
+      queryAll(`SELECT s.id, s.start_date, s.end_date, s.status, p.name AS pet_name, p.image_url,
+                       u.name AS volunteer_name, u.city AS volunteer_city, v.phone
+                FROM foster_stays s
+                JOIN pets p ON p.id = s.pet_id
+                JOIN volunteers v ON v.id = s.volunteer_id
+                JOIN users u ON u.id = v.user_id
+                WHERE s.status = 'activa'${mias}
+                ORDER BY s.start_date DESC`, params)
+    ]);
+
+    const porMes = (filas) => Object.fromEntries(filas.map(f => [f.mes, Number(f.n)]));
+    const pubs = porMes(pubsPorMes);
+    const sols = porMes(solPorMes);
+
+    const data = {
+      especies: especies.map(e => ({ especie: e.especie || 'Sin especie', n: Number(e.n) })),
+      salud: Object.fromEntries(salud.map(s => [s.estado, Number(s.n)])),
+      solicitudes: Object.fromEntries(solicitudes.map(s => [s.estado, Number(s.n)])),
+      meses: meses.map(m => ({ mes: m, publicaciones: pubs[m] || 0, solicitudes: sols[m] || 0 })),
+      carnets: { total: Number(carnets.total), con_carnet: Number(carnets.con_carnet) },
+      transitos
+    };
+
+    // Donaciones por mes: solo tienen sentido para quien las recibe.
+    if (req.user.role === ROLES.REFUGIO || esAdmin(req)) {
+      const filtroDon = esAdmin(req) ? '' : ' AND d.refugio_id = ?';
+      const donaciones = await queryAll(`
+        SELECT to_char(COALESCE(d.recibida_at, d.created_at), 'YYYY-MM') AS mes,
+               COALESCE(SUM(d.monto) FILTER (WHERE d.tipo = 'dinero'), 0) AS dinero,
+               COUNT(*) FILTER (WHERE d.tipo = 'especie') AS especie
+        FROM donations d
+        WHERE d.estado = 'recibida' AND COALESCE(d.recibida_at, d.created_at) >= ?::date${filtroDon}
+        GROUP BY mes`, [desde, ...(esAdmin(req) ? [] : [req.user.id])]);
+      const porMesDon = Object.fromEntries(donaciones.map(d => [d.mes, d]));
+      data.donaciones = meses.map(m => ({
+        mes: m,
+        dinero: Number(porMesDon[m]?.dinero || 0),
+        especie: Number(porMesDon[m]?.especie || 0)
+      }));
+    }
+
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('Estadísticas backoffice error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch stats' });
+  }
+});
+
 // GET /mascotas — las publicaciones que gestiona este usuario.
 router.get('/mascotas', ...soloGestores, async (req, res) => {
   try {
@@ -55,7 +139,8 @@ router.get('/mascotas', ...soloGestores, async (req, res) => {
     const mascotas = await queryAll(`
       SELECT p.*,
              (SELECT COUNT(*) FROM chats c WHERE c.pet_id = p.id AND c.status = 'pendiente') AS solicitudes_pendientes,
-             (SELECT COUNT(*) FROM foster_stays s WHERE s.pet_id = p.id AND s.status = 'activa') AS en_transito
+             (SELECT COUNT(*) FROM foster_stays s WHERE s.pet_id = p.id AND s.status = 'activa') AS en_transito,
+             EXISTS (SELECT 1 FROM pet_carnets pc WHERE pc.pet_id = p.id) AS has_carnet
       FROM pets p ${filtro}
       ORDER BY p.is_adopted ASC, p.id DESC
     `, params);

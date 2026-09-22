@@ -364,6 +364,51 @@ async function initDatabase() {
       AND marker_left ~ '^-?[0-9]+(\\.[0-9]+)?$'
   `);
 
+  // Estado de salud de la mascota en adopción (cartel del catálogo). No es lo
+  // mismo que 'badge' (etiqueta editorial tipo "Urgente"): esto dice si el animal
+  // se puede llevar hoy o si está atravesando una situación médica.
+  //   disponible          → sin restricciones
+  //   con_cuidado         → salió hace poco de una operación, se adopta con cuidados
+  //   en_reposo           → recién operado, todavía no puede irse
+  //   cirugia_programada  → tiene una operación en camino
+  await pool.query(`ALTER TABLE pets ADD COLUMN IF NOT EXISTS health_status TEXT NOT NULL DEFAULT 'disponible'`);
+  await pool.query(`ALTER TABLE pets ADD COLUMN IF NOT EXISTS health_note TEXT DEFAULT ''`);
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'pets_health_status_check') THEN
+        ALTER TABLE pets ADD CONSTRAINT pets_health_status_check
+          CHECK (health_status IN ('disponible', 'con_cuidado', 'en_reposo', 'cirugia_programada'));
+      END IF;
+    END $$;
+  `);
+
+  // Carnet digital de cada animal del catálogo: uno por mascota. Es distinto de
+  // 'carnets', que es el carnet de la mascota propia de un usuario. Las listas
+  // (vacunas, enfermedades, historial) se guardan como JSON en texto, igual que
+  // en 'carnets', porque siempre se leen enteras.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS pet_carnets (
+      id SERIAL PRIMARY KEY,
+      pet_id INTEGER NOT NULL UNIQUE,
+      gender TEXT DEFAULT '',
+      birth_date TEXT DEFAULT '',
+      color_markings TEXT DEFAULT '',
+      microchip_id TEXT DEFAULT '',
+      weight_kg NUMERIC,
+      spayed_neutered INTEGER DEFAULT 0,
+      vaccinations TEXT DEFAULT '[]',
+      diseases TEXT DEFAULT '[]',
+      treatments TEXT DEFAULT '',
+      allergies TEXT DEFAULT '',
+      medical_history TEXT DEFAULT '[]',
+      vet_name TEXT DEFAULT '',
+      vet_clinic TEXT DEFAULT '',
+      vet_phone TEXT DEFAULT '',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+    )
+  `);
+
   // Seed if empty
   const res = await pool.query('SELECT COUNT(*) as count FROM users');
   const count = parseInt(res.rows[0].count, 10);
@@ -411,6 +456,32 @@ async function initDatabase() {
     }
   } catch (err) {
     console.error('Error ensuring demo user carnets:', err);
+  }
+
+  // Los carnets de las mascotas de demo se crean aparte del seed principal:
+  // la base de producción ya estaba sembrada cuando se agregó esta función, y
+  // así cada estado de salud queda representado para la defensa.
+  try {
+    const conCarnet = await queryOne('SELECT COUNT(*) AS count FROM pet_carnets');
+    if (conCarnet && parseInt(conCarnet.count, 10) === 0) {
+      console.log('🌱 Creating demo pet carnets...');
+      await seedPetCarnets();
+    }
+  } catch (err) {
+    console.error('Error seeding pet carnets:', err);
+  }
+
+  // Refugios de demo para el mapa de refugios: el seed original tiene uno solo
+  // (Sarah), y un mapa con un pin no muestra nada. Cada uno queda con zona
+  // fijada y un par de mascotas publicadas.
+  try {
+    const existe = await queryOne('SELECT id FROM users WHERE email = ?', ['huellitas@patamatch.com']);
+    if (!existe) {
+      console.log('🌱 Creating demo shelters...');
+      await seedRefugiosDemo();
+    }
+  } catch (err) {
+    console.error('Error seeding demo shelters:', err);
   }
 
   // Ensure initial comments exist
@@ -541,6 +612,127 @@ async function seedDatabase() {
   await runQuery("INSERT INTO stories (pet_name,author_name,title,body,image_url,badge,is_approved,user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)", ['Luna', 'Familia Miller', 'El Nuevo Viaje de Luna', 'Después de 400 días en el refugio, Luna finalmente encontró a su familia ideal.', 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?w=800&q=80&auto=format&fit=crop', 'Final Feliz', 1, 1]);
 
   console.log('✅ Database seeded!');
+}
+
+// Carnet + estado de salud de las cuatro mascotas del catálogo de demo. Se
+// buscan por nombre porque el id depende del orden del seed original.
+async function seedPetCarnets() {
+  const demo = {
+    Cooper: {
+      estado: ['disponible', ''],
+      carnet: ['Macho', '2025-03-10', 'Tricolor, mancha blanca en el pecho', '9851 2030 1122 001', 11.2, 1,
+        [
+          { name: 'Séxtuple (DHPPiL)', last_dose: '10 Mar, 2026', next_dose: '10 Mar, 2027', status: 'updated' },
+          { name: 'Antirrábica', last_dose: '15 Abr, 2026', next_dose: '15 Abr, 2027', status: 'updated' }
+        ],
+        [], '', 'Ninguna conocida',
+        [{ date: '15 ABR, 2026', title: 'Control anual', description: 'Peso ideal, sin hallazgos. Se aplicó antirrábica.' }],
+        'Dra. Paula Ferreyra', 'Veterinaria del Parque', '(351) 455-1020']
+    },
+    Luna: {
+      estado: ['con_cuidado', 'Castrada el 15 de septiembre. Evitar saltos y mantener el collar isabelino hasta el control del 29/9.'],
+      carnet: ['Hembra', '2023-06-02', 'Crema con puntas marrones (seal point)', '9851 2030 1122 002', 3.8, 1,
+        [
+          { name: 'Triple felina', last_dose: '20 Feb, 2026', next_dose: '20 Feb, 2027', status: 'updated' },
+          { name: 'Leucemia felina', last_dose: '20 Feb, 2026', next_dose: '20 Feb, 2027', status: 'updated' },
+          { name: 'Antirrábica', last_dose: '05 Sep, 2025', next_dose: '05 Sep, 2026', status: 'expiring' }
+        ],
+        [{ name: 'Gingivitis leve', status: 'en_tratamiento', notes: 'Limpieza dental cada 6 meses' }],
+        'Antibiótico post-operatorio hasta el 25/9', 'Ninguna conocida',
+        [
+          { date: '15 SEP, 2026', title: 'Castración', description: 'Cirugía sin complicaciones. Reposo relativo 14 días.' },
+          { date: '20 FEB, 2026', title: 'Vacunación anual', description: 'Refuerzo triple y leucemia sin reacciones.' }
+        ],
+        'Dr. Martín Sosa', 'Clínica Felina Norte', '(351) 422-8890']
+    },
+    Buddy: {
+      estado: ['cirugia_programada', 'Limpieza dental con extracción programada para el 8 de octubre. Puede conocerse antes; se entrega después de la cirugía.'],
+      carnet: ['Macho', '2022-08-18', 'Dorado', '9851 2030 1122 003', 31.5, 1,
+        [
+          { name: 'Séxtuple (DHPPiL)', last_dose: '18 Ago, 2026', next_dose: '18 Ago, 2027', status: 'updated' },
+          { name: 'Antirrábica', last_dose: '18 Ago, 2026', next_dose: '18 Ago, 2027', status: 'updated' },
+          { name: 'Tos de las perreras', last_dose: '10 Ene, 2026', next_dose: '10 Ene, 2027', status: 'updated' }
+        ],
+        [{ name: 'Enfermedad periodontal', status: 'en_tratamiento', notes: 'Requiere extracción de dos piezas' }],
+        '', 'Pollo (dermatitis)',
+        [
+          { date: '18 AGO, 2026', title: 'Control anual', description: 'Se detecta sarro avanzado; se programa limpieza dental.' },
+          { date: '10 ENE, 2026', title: 'Consulta por picazón', description: 'Dermatitis alérgica alimentaria. Dieta sin pollo.' }
+        ],
+        'Dra. Paula Ferreyra', 'Veterinaria del Parque', '(351) 455-1020']
+    },
+    Milo: {
+      estado: ['en_reposo', 'Operado de una fractura en la pata delantera el 18 de septiembre. Reposo estricto 4 semanas; no se entrega hasta el alta.'],
+      carnet: ['Macho', '2026-03-20', 'Rojizo y blanco', '9851 2030 1122 004', 6.1, 0,
+        [
+          { name: 'Séxtuple (DHPPiL) — 1ª dosis', last_dose: '05 May, 2026', next_dose: '05 Jun, 2026', status: 'updated' },
+          { name: 'Séxtuple (DHPPiL) — 2ª dosis', last_dose: '05 Jun, 2026', next_dose: '05 Jul, 2026', status: 'updated' },
+          { name: 'Antirrábica', last_dose: '', next_dose: 'Pendiente (al alta)', status: 'expired' }
+        ],
+        [], 'Analgésico cada 12 h hasta el 2/10', 'Ninguna conocida',
+        [
+          { date: '18 SEP, 2026', title: 'Cirugía de fractura', description: 'Osteosíntesis en radio derecho. Evolución favorable.' },
+          { date: '05 JUN, 2026', title: 'Segunda dosis séxtuple', description: 'Desparasitación interna incluida.' }
+        ],
+        'Dr. Martín Sosa', 'Clínica Felina Norte', '(351) 422-8890']
+    }
+  };
+
+  for (const [nombre, d] of Object.entries(demo)) {
+    const pet = await queryOne('SELECT id FROM pets WHERE name = ? AND user_id = 1 ORDER BY id LIMIT 1', [nombre]);
+    if (!pet) continue;
+    await runQuery('UPDATE pets SET health_status = ?, health_note = ? WHERE id = ?', [d.estado[0], d.estado[1], pet.id]);
+    const c = d.carnet;
+    await runQuery(
+      `INSERT INTO pet_carnets (pet_id, gender, birth_date, color_markings, microchip_id, weight_kg, spayed_neutered,
+        vaccinations, diseases, treatments, allergies, medical_history, vet_name, vet_clinic, vet_phone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [pet.id, c[0], c[1], c[2], c[3], c[4], c[5], JSON.stringify(c[6]), JSON.stringify(c[7]), c[8], c[9], JSON.stringify(c[10]), c[11], c[12], c[13]]
+    );
+  }
+}
+
+// Tres refugios verificados con zona fijada, cada uno con mascotas publicadas,
+// para que el mapa de refugios y el panel tengan datos que mostrar.
+async function seedRefugiosDemo() {
+  const hash = bcrypt.hashSync('demo123', 10);
+  const refugios = [
+    {
+      user: ['Huellitas CDMX', 'huellitas@patamatch.com', 'Roma Norte, CDMX', 19.4194, -99.1618],
+      pets: [
+        ['Canela', 'Perro', 'Mestizo', '2 Años', 'Mediano', 'Roma Norte, CDMX', 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&q=80&auto=format&fit=crop', 'Muy tranquila, ideal para departamento.', 'disponible', ''],
+        ['Pelusa', 'Gato', 'Común europeo', '1 Año', 'Pequeño', 'Roma Norte, CDMX', 'https://images.unsplash.com/photo-1495360010541-f48722764df0?w=600&q=80&auto=format&fit=crop', 'Juguetona y muy cariñosa con otros gatos.', 'con_cuidado', 'Castrada el 18 de septiembre. Control el 2 de octubre.']
+      ]
+    },
+    {
+      user: ['Refugio Patitas Córdoba', 'patitas@patamatch.com', 'Córdoba, Argentina', -31.4135, -64.1811],
+      pets: [
+        ['Tango', 'Perro', 'Labrador', '5 Años', 'Grande', 'Córdoba, Argentina', 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80&auto=format&fit=crop', 'Compañero fiel, le encanta el agua.', 'disponible', ''],
+        ['Mora', 'Perro', 'Mestizo', '8 Meses', 'Pequeño', 'Córdoba, Argentina', 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&q=80&auto=format&fit=crop', 'Cachorra curiosa, aprende rápido.', 'cirugia_programada', 'Castración programada para el 10 de octubre.']
+      ]
+    },
+    {
+      user: ['Rescate Animal Austin', 'rescate@patamatch.com', 'Austin, TX', 30.2849, -97.7341],
+      pets: [
+        ['Simba', 'Gato', 'Naranja', '3 Años', 'Mediano', 'Austin, TX', 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&q=80&auto=format&fit=crop', 'Dormilón y muy sociable.', 'disponible', '']
+      ]
+    }
+  ];
+
+  for (const r of refugios) {
+    const [name, email, city, lat, lng] = r.user;
+    const creado = await runQuery(
+      'INSERT INTO users (name, email, password_hash, city, avatar_url, lat, lng, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, email, hash, city, '', lat, lng, 'refugio']
+    );
+    for (const p of r.pets) {
+      await runQuery(
+        `INSERT INTO pets (name, species, breed, age, size, location, image_url, description, health_status, health_note, user_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [...p, creado.lastInsertRowid]
+      );
+    }
+  }
 }
 
 function saveDatabase() {

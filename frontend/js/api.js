@@ -92,6 +92,7 @@ export async function getPets(filters = {}) {
   if (filters.size) params.set('size', filters.size);
   if (filters.age) params.set('age', filters.age);
   if (filters.is_adopted !== undefined) params.set('is_adopted', filters.is_adopted);
+  if (filters.health_status) params.set('health_status', filters.health_status);
   if (filters.limit) params.set('limit', filters.limit);
   if (filters.offset) params.set('offset', filters.offset);
   const qs = params.toString();
@@ -100,6 +101,16 @@ export async function getPets(filters = {}) {
 
 export async function getPet(id) {
   return request('GET', `/pets/${id}`);
+}
+
+// Carnet digital de una mascota del catálogo (distinto de getCarnets, que es
+// el carnet de la mascota propia del usuario).
+export async function getCarnetMascota(id) {
+  return request('GET', `/pets/${id}/carnet`);
+}
+
+export async function guardarCarnetMascota(id, data) {
+  return request('PUT', `/pets/${id}/carnet`, data);
 }
 
 export async function createPet(petData) {
@@ -232,6 +243,22 @@ export async function getResumen() {
 
 export async function getMisMascotas() {
   return request('GET', '/backoffice/mascotas');
+}
+
+export async function getEstadisticas() {
+  return request('GET', '/backoffice/estadisticas');
+}
+
+// ========== Refugios (directorio público + mapa) ==========
+export async function getRefugiosMapa() {
+  return request('GET', '/refugios');
+}
+
+// Refugios de la zona según Google Places (o OpenStreetMap si no hay clave).
+export async function buscarRefugiosCercanos(lat, lng, radio) {
+  const qs = new URLSearchParams({ lat, lng });
+  if (radio) qs.set('radio', radio);
+  return request('GET', `/refugios/externos?${qs}`);
 }
 
 export async function getSolicitudes() {

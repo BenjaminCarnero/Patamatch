@@ -4,7 +4,23 @@ Checklist de trabajo interno del equipo. Se arma contra el documento oficial
 **"Requisitos de la Carpeta de Documentación - PIN 2026"** (Mgter. Lic. Enzo Varela).
 No es para entregar — es la lista de tareas para llegar al documento final en PDF.
 
-**Actualizado: 3 de septiembre de 2026.**
+**Actualizado: 22 de septiembre de 2026.**
+
+## Novedad del 22 de septiembre
+
+Se agregó el **carnet digital por animal del catálogo** con **cartel de estado de salud**
+(disponible / con cuidados / en reposo / cirugía en camino). Ya quedó reflejado en 2.6
+(RF-26) y en 2.11 (tabla `pet_carnets`, columnas `health_status` y `health_note` en `pets`).
+Falta sumarlo al manual de usuario (2.13: cómo cargar el carnet desde el backoffice y cómo
+verlo tocando la foto) y tomar una captura del modal del carnet para `docs/capturas/`.
+
+También se amplió el **panel de gestión del refugio** (gráficos de actividad por mes,
+estado de salud, solicitudes, especies, cobertura de carnets, donaciones por mes y
+tránsitos activos) y se agregó la página **Refugios** (`#refugios`): mapa Leaflet con los
+refugios registrados más los que devuelve Google Places / OpenStreetMap en la zona
+(`GET /api/refugios` y `GET /api/refugios/externos`, ver 2.12 para la clave). Pendiente:
+sumar RF-27 (directorio y mapa de refugios) en 2.6, describir el panel nuevo en 2.13 y
+sumar Google Places / Nominatim como servicios externos en 2.9.
 
 ## Cambio de contexto respecto de la revisión anterior
 

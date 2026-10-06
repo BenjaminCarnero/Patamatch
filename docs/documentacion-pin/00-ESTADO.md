@@ -22,6 +22,11 @@ refugios registrados más los que devuelve Google Places / OpenStreetMap en la z
 sumar RF-27 (directorio y mapa de refugios) en 2.6, describir el panel nuevo en 2.13 y
 sumar Google Places / Nominatim como servicios externos en 2.9.
 
+Se agregó `scripts/seed-demo.js`, que carga datos de demostración (refugios, mascotas con
+carnet, perdidas, comunidad, chats, donaciones, tránsitos) y se puede limpiar sin tocar lo
+real; ver 2.12. Con eso el catálogo pasó a cargarse de a tandas ("Ver más mascotas"), porque
+antes solo mostraba las 20 más nuevas.
+
 Como OpenStreetMap casi no tiene refugios cargados en Latinoamérica (1 en Córdoba, 0 en
 Buenos Aires) y Overture Maps trae sobre todo criaderos y pet shops, se agregó el botón
 **Sumá un refugio**: la comunidad carga los refugios chicos que no figuran en ningún mapa y

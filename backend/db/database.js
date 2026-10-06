@@ -742,7 +742,7 @@ async function seedRefugiosDemo() {
       user: ['Huellitas CDMX', 'huellitas@patamatch.com', 'Roma Norte, CDMX', 19.4194, -99.1618],
       pets: [
         ['Canela', 'Perro', 'Mestizo', '2 Años', 'Mediano', 'Roma Norte, CDMX', 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&q=80&auto=format&fit=crop', 'Muy tranquila, ideal para departamento.', 'disponible', ''],
-        ['Pelusa', 'Gato', 'Común europeo', '1 Año', 'Pequeño', 'Roma Norte, CDMX', 'https://images.unsplash.com/photo-1495360010541-f48722764df0?w=600&q=80&auto=format&fit=crop', 'Juguetona y muy cariñosa con otros gatos.', 'con_cuidado', 'Castrada el 18 de septiembre. Control el 2 de octubre.']
+        ['Pelusa', 'Gato', 'Común europeo', '1 Año', 'Pequeño', 'Roma Norte, CDMX', 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&q=80&auto=format&fit=crop', 'Juguetona y muy cariñosa con otros gatos.', 'con_cuidado', 'Castrada el 18 de septiembre. Control el 2 de octubre.']
       ]
     },
     {

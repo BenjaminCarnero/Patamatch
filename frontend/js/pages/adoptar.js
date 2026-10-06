@@ -255,6 +255,13 @@ export function render() {
     <div class="col-span-full text-center py-10 text-on-surface-variant">Cargando mascotas...</div>
   </div>
 
+  <!-- Paginación: el catálogo trae las mascotas de a tandas -->
+  <div id="load-more-wrap" class="hidden text-center mt-10">
+    <button id="load-more-pets" class="px-8 py-3 rounded-xl border-2 border-primary text-primary font-label-lg hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+      Ver más mascotas
+    </button>
+  </div>
+
   <!-- No results message -->
   <div id="no-results" class="hidden text-center py-20">
     <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
@@ -268,9 +275,16 @@ export function render() {
 export async function init() {
   const petGrid = document.getElementById('pet-grid');
   const noResults = document.getElementById('no-results');
-  
-  // Load pets from API
-  async function loadPets() {
+  const loadMoreWrap = document.getElementById('load-more-wrap');
+  const loadMoreBtn = document.getElementById('load-more-pets');
+
+  // El catálogo se carga de a tandas: sin esto, el backend devuelve solo las 20
+  // más nuevas y el resto del catálogo quedaría inalcanzable.
+  const PAGE_SIZE = 24;
+  let loaded = 0;
+
+  // Load pets from API. Con append = true suma la siguiente tanda en vez de reemplazar.
+  async function loadPets({ append = false } = {}) {
     try {
       const species = document.getElementById('filter-species').value;
       const size = document.getElementById('filter-size').value;
@@ -286,26 +300,45 @@ export async function init() {
         filters.size = size.split(' ')[0]; 
       }
 
+      // Se pide una de más: si llega, hay otra tanda y se muestra el botón.
+      filters.limit = PAGE_SIZE + 1;
+      filters.offset = append ? loaded : 0;
+
       const res = await api.getPets(filters);
       if (res.success) {
-        const pets = res.data;
-        if (pets.length === 0) {
+        const hayMas = res.data.length > PAGE_SIZE;
+        const pets = res.data.slice(0, PAGE_SIZE);
+        if (!append) loaded = 0;
+
+        if (pets.length === 0 && !append) {
           petGrid.innerHTML = '';
           noResults.classList.remove('hidden');
         } else {
           noResults.classList.add('hidden');
-          petGrid.innerHTML = pets.map(p => buildPetCard(p)).join('');
+          const html = pets.map(p => buildPetCard(p)).join('');
+          if (append) petGrid.insertAdjacentHTML('beforeend', html);
+          else petGrid.innerHTML = html;
+          loaded += pets.length;
           attachCardEvents();
         }
+        loadMoreWrap.classList.toggle('hidden', !hayMas);
       }
     } catch (err) {
       petGrid.innerHTML = '<div class="col-span-full text-center py-10 text-error">Error al cargar mascotas.</div>';
     }
   }
 
+  loadMoreBtn.addEventListener('click', async () => {
+    loadMoreBtn.disabled = true;
+    await loadPets({ append: true });
+    loadMoreBtn.disabled = false;
+  });
+
   function attachCardEvents() {
     // Favorite buttons
-    petGrid.querySelectorAll('.fav-btn').forEach(btn => {
+    // Con "Ver más" se vuelve a llamar acá: solo se enlazan las tarjetas nuevas.
+    petGrid.querySelectorAll('.fav-btn:not([data-bound])').forEach(btn => {
+      btn.dataset.bound = '1';
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!api.isLoggedIn()) {
@@ -336,12 +369,14 @@ export async function init() {
     });
 
     // La foto del animal abre su carnet digital — público, no pide sesión
-    petGrid.querySelectorAll('.pet-photo').forEach(img => {
+    petGrid.querySelectorAll('.pet-photo:not([data-bound])').forEach(img => {
+      img.dataset.bound = '1';
       img.addEventListener('click', () => abrirCarnetMascota(img.getAttribute('data-pet-id')));
     });
 
     // Adopt buttons
-    petGrid.querySelectorAll('.adopt-btn').forEach(btn => {
+    petGrid.querySelectorAll('.adopt-btn:not([data-bound])').forEach(btn => {
+      btn.dataset.bound = '1';
       btn.addEventListener('click', async () => {
         if (!api.isLoggedIn()) {
           window.PataMatch.toast('Inicia sesión para adoptar', 'error');

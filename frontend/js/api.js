@@ -254,10 +254,10 @@ export async function getRefugiosMapa() {
   return request('GET', '/refugios');
 }
 
-// Refugios de la zona según Google Places (o OpenStreetMap si no hay clave).
-export async function buscarRefugiosCercanos(lat, lng, radio) {
-  const qs = new URLSearchParams({ lat, lng });
-  if (radio) qs.set('radio', radio);
+// Refugios dentro del recuadro visible del mapa ({ s, w, n, e }) según Google
+// Places (o OpenStreetMap si no hay clave).
+export async function buscarRefugiosCercanos({ s, w, n, e }) {
+  const qs = new URLSearchParams({ s, w, n, e });
   return request('GET', `/refugios/externos?${qs}`);
 }
 

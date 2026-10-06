@@ -143,6 +143,9 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ddc0b8; border-radius: 10px; }
+        /* Los paneles de Leaflet usan z-index de 400 a 1000: sin esto el mapa se
+           dibuja por encima del header y de sus menús desplegables. */
+        .leaflet-container { z-index: 0; }
         /* Map gradient */
         .map-gradient-overlay {
             background: linear-gradient(to bottom, rgba(255, 248, 244, 0.9) 0%, rgba(255, 248, 244, 0) 20%);
@@ -190,11 +193,35 @@
             <nav class="hidden md:flex items-center gap-8 font-['Plus_Jakarta_Sans'] text-sm font-semibold tracking-tight" id="nav-links">
                 <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#adoptar" data-page="adoptar">Adoptar</a>
                 <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#mascotas-perdidas" data-page="mascotas-perdidas">Mascotas Perdidas</a>
-                <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#voluntariado" data-page="voluntariado">Voluntariado</a>
-                <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#donaciones" data-page="donaciones">Donar</a>
                 <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#refugios" data-page="refugios">Refugios</a>
-                <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#comunidad" data-page="comunidad">Comunidad</a>
-                <a class="nav-link text-stone-600 hover:text-[#D96C4A] transition-all duration-200" href="#historias" data-page="historias">Historias</a>
+                <!-- Secciones secundarias agrupadas para no saturar la barra -->
+                <div id="nav-mas" class="relative">
+                    <button id="nav-mas-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mas-panel"
+                        class="nav-mas-btn inline-flex items-center gap-0.5 text-stone-600 hover:text-[#D96C4A] transition-all duration-200 font-semibold tracking-tight">
+                        Más
+                        <span id="nav-mas-chevron" class="material-symbols-outlined text-[18px] transition-transform duration-200">expand_more</span>
+                    </button>
+                    <div id="nav-mas-panel" class="hidden absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50">
+                        <div class="bg-white rounded-xl shadow-xl border border-stone-100 p-2 w-64">
+                            <a href="#voluntariado" data-page="voluntariado" class="nav-mas-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-600 hover:bg-orange-50 hover:text-[#D96C4A] transition-colors">
+                                <span class="material-symbols-outlined text-[22px] text-[#D96C4A]">volunteer_activism</span>
+                                <span class="flex flex-col leading-tight"><span class="text-sm font-semibold">Voluntariado</span><span class="text-xs font-normal text-stone-500">Hogares de tránsito</span></span>
+                            </a>
+                            <a href="#donaciones" data-page="donaciones" class="nav-mas-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-600 hover:bg-orange-50 hover:text-[#D96C4A] transition-colors">
+                                <span class="material-symbols-outlined text-[22px] text-[#D96C4A]">savings</span>
+                                <span class="flex flex-col leading-tight"><span class="text-sm font-semibold">Donar</span><span class="text-xs font-normal text-stone-500">Ayudá a un refugio</span></span>
+                            </a>
+                            <a href="#comunidad" data-page="comunidad" class="nav-mas-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-600 hover:bg-orange-50 hover:text-[#D96C4A] transition-colors">
+                                <span class="material-symbols-outlined text-[22px] text-[#D96C4A]">forum</span>
+                                <span class="flex flex-col leading-tight"><span class="text-sm font-semibold">Comunidad</span><span class="text-xs font-normal text-stone-500">Consejos y charlas</span></span>
+                            </a>
+                            <a href="#historias" data-page="historias" class="nav-mas-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-600 hover:bg-orange-50 hover:text-[#D96C4A] transition-colors">
+                                <span class="material-symbols-outlined text-[22px] text-[#D96C4A]">auto_stories</span>
+                                <span class="flex flex-col leading-tight"><span class="text-sm font-semibold">Historias</span><span class="text-xs font-normal text-stone-500">Finales felices</span></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </nav>
         </div>
         <div class="flex items-center gap-4">
@@ -267,9 +294,10 @@
         <nav class="flex flex-col p-4 gap-1">
             <a href="#adoptar" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="adoptar">Adoptar</a>
             <a href="#mascotas-perdidas" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="mascotas-perdidas">Mascotas Perdidas</a>
+            <a href="#refugios" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="refugios">Refugios</a>
+            <p class="px-4 pt-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-stone-400">Más</p>
             <a href="#voluntariado" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="voluntariado">Voluntariado</a>
             <a href="#donaciones" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="donaciones">Donar</a>
-            <a href="#refugios" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="refugios">Refugios</a>
             <a href="#comunidad" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="comunidad">Comunidad</a>
             <a href="#historias" class="nav-link-mobile px-4 py-3 rounded-lg text-stone-600 font-semibold hover:bg-orange-50 transition-colors" data-page="historias">Historias</a>
         </nav>
@@ -411,7 +439,22 @@
                 link.classList.add('text-stone-600');
             }
         });
-        
+
+        // El grupo "Más" se marca activo cuando la página actual es una de sus secciones.
+        const enMas = [...document.querySelectorAll('.nav-mas-link')].some(l => l.getAttribute('data-page') === hash);
+        const masBtn = document.getElementById('nav-mas-btn');
+        masBtn.classList.toggle('text-[#D96C4A]', enMas);
+        masBtn.classList.toggle('border-b-2', enMas);
+        masBtn.classList.toggle('border-[#D96C4A]', enMas);
+        masBtn.classList.toggle('pb-1', enMas);
+        masBtn.classList.toggle('text-stone-600', !enMas);
+        document.querySelectorAll('.nav-mas-link').forEach(l => {
+            const activo = l.getAttribute('data-page') === hash;
+            l.classList.toggle('bg-orange-50', activo);
+            l.classList.toggle('text-[#D96C4A]', activo);
+        });
+        setNavMas(false);
+
         // Update page title
         const titles = {
             home: 'PataMatch — Donde cada pata encuentra su hogar',
@@ -498,6 +541,41 @@
         menu.classList.remove('mobile-menu-open');
         setTimeout(() => { menu.style.display = 'none'; }, 300);
     }
+
+    // ========== Menú "Más" (escritorio) ==========
+    // Se abre al pasar el mouse y también con clic (para teclado y táctil). Un
+    // clic lo "fija" abierto; se cierra con Esc, clic afuera o al cambiar de página.
+    const navMas = document.getElementById('nav-mas');
+    const navMasBtn = document.getElementById('nav-mas-btn');
+    const navMasPanel = document.getElementById('nav-mas-panel');
+    const navMasChevron = document.getElementById('nav-mas-chevron');
+    let navMasFijo = false;
+
+    function setNavMas(abierto) {
+        navMasPanel.classList.toggle('hidden', !abierto);
+        navMasChevron.classList.toggle('rotate-180', abierto);
+        navMasBtn.setAttribute('aria-expanded', String(abierto));
+        if (!abierto) navMasFijo = false;
+    }
+
+    navMasBtn.addEventListener('click', () => {
+        const abierto = !navMasPanel.classList.contains('hidden');
+        if (abierto && navMasFijo) {
+            setNavMas(false);
+        } else {
+            setNavMas(true);
+            navMasFijo = true;
+        }
+    });
+    navMas.addEventListener('mouseenter', () => setNavMas(true));
+    navMas.addEventListener('mouseleave', () => { if (!navMasFijo) setNavMas(false); });
+    document.addEventListener('click', (e) => { if (!navMas.contains(e.target)) setNavMas(false); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !navMasPanel.classList.contains('hidden')) {
+            setNavMas(false);
+            navMasBtn.focus();
+        }
+    });
 
     // ========== Event Listeners ==========
     document.getElementById('mobile-menu-btn')?.addEventListener('click', toggleMobileMenu);

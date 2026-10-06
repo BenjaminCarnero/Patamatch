@@ -134,7 +134,7 @@ export function barraApilada(segmentos, { vacio = 'Sin datos todavía.' } = {}) 
       ${visibles.map(s => {
         const pct = (s.n / total) * 100;
         return `<div class="h-full flex items-center justify-center text-[11px] font-bold text-white" style="width:${pct}%;background:${s.color}" data-tip="${esc(`<strong>${s.label}</strong><br>${s.n} de ${total} (${Math.round(pct)}%)`)}">
-          ${pct >= 14 ? s.n : ''}
+          ${pct >= 5 ? s.n : ''}
         </div>`;
       }).join('')}
     </div>

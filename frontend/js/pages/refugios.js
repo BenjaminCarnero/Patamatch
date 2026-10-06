@@ -8,6 +8,13 @@ import { getRefugiosMapa, buscarRefugiosCercanos } from '../api.js';
 
 const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// Con el mapa más alejado que esto el área visible abarca cientos de km y la
+// búsqueda devolvería un recorte arbitrario: se pide acercar el mapa.
+const ZOOM_MIN_BUSQUEDA = 10;
+
+// Los datos externos (OSM) son colaborativos: solo se enlazan URLs http(s).
+const urlHttp = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
+
 export function render() {
     return `
     <div class="max-w-7xl mx-auto px-6 py-12">
@@ -51,10 +58,10 @@ export function render() {
                     <p class="text-xs text-stone-500 mb-3">Refugios verificados. Tocá uno para ubicarlo en el mapa.</p>
                     <div id="ref-lista" class="space-y-3"><p class="text-sm text-stone-400">Cargando refugios...</p></div>
                 </section>
-                <section id="ref-externos-bloque" class="hidden">
+                <section id="ref-externos-bloque">
                     <h2 class="font-bold text-lg text-stone-800 mb-1">Encontrados en la zona</h2>
-                    <p class="text-xs text-stone-500 mb-3" id="ref-externos-sub"></p>
-                    <div id="ref-externos" class="space-y-2"></div>
+                    <p class="text-xs text-stone-500 mb-3" id="ref-externos-sub">Buscando refugios en la zona del mapa...</p>
+                    <div id="ref-externos" class="space-y-2 max-h-[480px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </section>
             </div>
         </div>
@@ -164,7 +171,7 @@ export async function init() {
 
             // Sin zona propia, el mapa encuadra todos los refugios registrados.
             if (yo?.lat == null && puntos.length) {
-                mapa.fitBounds(puntos, { padding: [40, 40], maxZoom: 12 });
+                mapa.fitBounds(puntos, { padding: [40, 40], maxZoom: 12, animate: false });
             }
 
             cont.querySelectorAll('[data-refugio]').forEach(card =>
@@ -193,27 +200,47 @@ export async function init() {
             const [lugar] = await resp.json();
             if (!lugar) { aviso('No encontramos ese lugar', 'error'); return; }
             mapa.flyTo([Number(lugar.lat), Number(lugar.lon)], 12, { duration: 0.8 });
-            mapa.once('moveend', buscarEnZona);
+            mapa.once('moveend', () => buscarEnZona());
         } catch (err) {
             aviso('No se pudo buscar el lugar', 'error');
         }
     });
 
-    async function buscarEnZona() {
+    const BTN_BUSCAR = '<span class="material-symbols-outlined text-[18px]">travel_explore</span>Buscar refugios en esta zona';
+    let busquedaActual = 0;
+
+    // Busca los refugios del área visible del mapa. `silenciosa` es la búsqueda
+    // automática al abrir la página: no muestra avisos emergentes.
+    async function buscarEnZona({ silenciosa = false } = {}) {
         const btn = $('ref-buscar-zona');
-        const bloque = $('ref-externos-bloque');
+        const sub = $('ref-externos-sub');
         const cont = $('ref-externos');
-        const c = mapa.getCenter();
+
+        if (mapa.getZoom() < ZOOM_MIN_BUSQUEDA) {
+            sub.textContent = 'Acercá el mapa a una ciudad (o buscala arriba) para ver los refugios de esa zona.';
+            if (!silenciosa) aviso('Acercá el mapa para buscar refugios en la zona', 'info');
+            return;
+        }
+
+        const id = ++busquedaActual;
+        const b = mapa.getBounds();
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>Buscando...';
+        sub.textContent = 'Buscando refugios en la zona del mapa...';
         try {
-            const { data } = await buscarRefugiosCercanos(c.lat.toFixed(5), c.lng.toFixed(5), 15000);
-            bloque.classList.remove('hidden');
+            const { data } = await buscarRefugiosCercanos({
+                s: b.getSouth().toFixed(4), w: b.getWest().toFixed(4),
+                n: b.getNorth().toFixed(4), e: b.getEast().toFixed(4)
+            });
+            if (id !== busquedaActual) return; // llegó una búsqueda más nueva
+
             $('ref-proveedor').textContent = data.proveedor === 'google'
                 ? 'Refugios de la zona provistos por Google Places.'
-                : 'Refugios de la zona provistos por OpenStreetMap (sin clave de Google configurada).';
-            $('ref-externos-sub').textContent = data.lugares.length
-                ? `${data.lugares.length} refugio(s) a menos de 15 km del centro del mapa. No están registrados en PataMatch.`
+                : data.degradado
+                    ? 'Google Places no respondió: se muestran los refugios cargados en OpenStreetMap, que pueden ser pocos.'
+                    : 'Refugios de la zona de OpenStreetMap, una base colaborativa: puede que no estén todos los de tu zona.';
+            sub.textContent = data.lugares.length
+                ? `${data.lugares.length} refugio(s) en esta zona. No están registrados en PataMatch.`
                 : 'No encontramos refugios en esta zona. Probá moviendo el mapa o buscando otra ciudad.';
 
             capaExternos.clearLayers();
@@ -224,7 +251,7 @@ export async function init() {
                     <div class="flex flex-wrap items-center gap-3 mt-1.5 text-[11px] text-stone-500">
                         ${l.rating != null ? `<span class="inline-flex items-center gap-0.5"><span class="material-symbols-outlined text-[13px] text-amber-500" style="font-variation-settings:'FILL' 1">star</span>${l.rating} (${l.reviews || 0})</span>` : ''}
                         ${l.phone ? `<a href="tel:${esc(l.phone)}" class="inline-flex items-center gap-0.5 hover:text-[#D96C4A]"><span class="material-symbols-outlined text-[13px]">call</span>${esc(l.phone)}</a>` : ''}
-                        ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 hover:text-[#D96C4A]"><span class="material-symbols-outlined text-[13px]">open_in_new</span>Ver ficha</a>` : ''}
+                        ${urlHttp(l.url) ? `<a href="${esc(urlHttp(l.url))}" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 hover:text-[#D96C4A]"><span class="material-symbols-outlined text-[13px]">open_in_new</span>Ver ficha</a>` : ''}
                     </div>
                 </div>`).join('');
 
@@ -234,7 +261,7 @@ export async function init() {
                     <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:160px">
                         <p style="font-weight:700;margin:0 0 2px">${esc(l.name)}</p>
                         <p style="margin:0;color:#78716c;font-size:12px">${esc(l.address)}</p>
-                        ${l.url ? `<a href="${esc(l.url)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:#D96C4A">Ver ficha →</a>` : ''}
+                        ${urlHttp(l.url) ? `<a href="${esc(urlHttp(l.url))}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:#D96C4A">Ver ficha →</a>` : ''}
                     </div>`);
                 capaExternos.addLayer(m);
                 externos[l.id] = m;
@@ -249,14 +276,20 @@ export async function init() {
                     $('ref-mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }));
         } catch (err) {
-            aviso(err.message, 'error');
+            if (id !== busquedaActual) return;
+            sub.textContent = 'No se pudieron cargar los refugios de la zona.';
+            if (!silenciosa) aviso(err.message, 'error');
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">travel_explore</span>Buscar refugios en esta zona';
+            if (id === busquedaActual) {
+                btn.disabled = false;
+                btn.innerHTML = BTN_BUSCAR;
+            }
         }
     }
 
-    $('ref-buscar-zona').addEventListener('click', buscarEnZona);
+    $('ref-buscar-zona').addEventListener('click', () => buscarEnZona());
 
-    cargarRefugios();
+    // Al abrir: primero los refugios registrados (que pueden reencuadrar el mapa)
+    // y después los de la zona, sin esperar a que el usuario toque el botón.
+    cargarRefugios().then(() => buscarEnZona({ silenciosa: true }));
 }

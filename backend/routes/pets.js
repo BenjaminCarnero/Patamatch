@@ -39,7 +39,7 @@ router.get('/', optionalAuth, async (req, res) => {
     // has_carnet permite mostrar el botón "Ver carnet" sin pedir cada carnet aparte.
     const sql = `SELECT p.*,
                         EXISTS (SELECT 1 FROM pet_carnets c WHERE c.pet_id = p.id) AS has_carnet
-                 FROM pets p ${whereClause} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
+                 FROM pets p ${whereClause} ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?`;
     params.push(Number(limit), Number(offset));
 
     const pets = await queryAll(sql, params);

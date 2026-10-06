@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "node --watch backend/server.js"
+    "dev": "node --watch backend/server.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "seed:demo:limpiar": "node scripts/seed-demo.js --limpiar"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -261,6 +261,26 @@ export async function buscarRefugiosCercanos({ s, w, n, e }) {
   return request('GET', `/refugios/externos?${qs}`);
 }
 
+// ========== Refugios aportados por la comunidad ==========
+// Los aprobados por un admin, para el mapa (público).
+export async function getRefugiosComunidad() {
+  return request('GET', '/refugios/comunidad');
+}
+
+// Sugerir un refugio. Queda pendiente hasta que un admin lo aprueba.
+export async function sugerirRefugio(datos) {
+  return request('POST', '/refugios/comunidad', datos);
+}
+
+// Solo admin: todas las sugerencias (pendientes primero), o las de un estado.
+export async function getSugerenciasRefugios(estado) {
+  return request('GET', `/refugios/comunidad/moderacion${estado ? `?estado=${estado}` : ''}`);
+}
+
+export async function resolverSugerenciaRefugio(id, status, note = '') {
+  return request('PUT', `/refugios/comunidad/${id}`, { status, note });
+}
+
 export async function getSolicitudes() {
   return request('GET', '/backoffice/solicitudes');
 }

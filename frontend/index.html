@@ -632,8 +632,11 @@
                         const id = el.getAttribute('data-notif-id');
                         const type = el.getAttribute('data-notif-type');
                         await api.markNotificationRead(id);
-                        // Las alertas por cercanía llevan al mapa de perdidos; el resto al chat.
-                        window.location.hash = type === 'lost_pet_nearby' ? 'mascotas-perdidas' : 'chats';
+                        // Cada tipo lleva a donde sirve: las alertas por cercanía al mapa de
+                        // perdidos, la revisión de un refugio sugerido al mapa de refugios,
+                        // y el resto al chat.
+                        const destinos = { lost_pet_nearby: 'mascotas-perdidas', shelter_suggestion: 'refugios' };
+                        window.location.hash = destinos[type] || 'chats';
                         loadNotifications();
                     });
                 });

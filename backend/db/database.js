@@ -236,6 +236,47 @@ async function initDatabase() {
     END $$;
   `);
 
+  // Refugios aportados por la comunidad. Los refugios chicos (de pueblo, de una
+  // casa, de un perfil de Instagram) no figuran en ninguna base de mapas, así que
+  // la única forma de tenerlos es que los cargue quien los conoce. Cada
+  // sugerencia nace 'pendiente' y un admin la aprueba antes de que se vea en el
+  // mapa. Se guarda un link de verificación (su perfil o web) y NO un teléfono:
+  // muchos son casas particulares y no corresponde publicar datos de contacto
+  // privados que cargó un tercero. Si 'approximate' = 1, el mapa muestra el
+  // punto redondeado (~100 m) en vez del exacto.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS shelter_suggestions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      city TEXT NOT NULL DEFAULT '',
+      address TEXT NOT NULL DEFAULT '',
+      lat NUMERIC NOT NULL,
+      lng NUMERIC NOT NULL,
+      approximate INTEGER NOT NULL DEFAULT 1,
+      url TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pendiente',
+      review_note TEXT NOT NULL DEFAULT '',
+      reviewed_by INTEGER,
+      reviewed_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (reviewed_by) REFERENCES users(id)
+    )
+  `);
+
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'shelter_suggestions_status_check') THEN
+        ALTER TABLE shelter_suggestions ADD CONSTRAINT shelter_suggestions_status_check
+          CHECK (status IN ('pendiente', 'aprobado', 'rechazado'));
+      END IF;
+    END $$;
+  `);
+
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_shelter_suggestions_status ON shelter_suggestions (status)`);
+
   // Estado de la solicitud de adopción. El chat ya vincula mascota, adoptante y
   // dueño, así que es la solicitud: no hace falta una tabla aparte, solo darle
   // un estado que el refugio pueda aprobar o rechazar desde el backoffice.

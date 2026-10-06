@@ -51,6 +51,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/backoffice', require('./routes/backoffice'));
 app.use('/api/donations', require('./routes/donations'));
 app.use('/api/refugios', require('./routes/refugios'));
+app.use('/api/refugios/comunidad', require('./routes/refugios-comunidad'));
 
 // SPA fallback — serve index.html for non-API routes
 app.get('*', (req, res) => {

@@ -1,6 +1,6 @@
 import { getResumen, getMisMascotas, getSolicitudes, resolverSolicitud, editarMascota, eliminarMascota,
          getDonacionesRecibidas, cambiarEstadoDonacion, getCarnetMascota, guardarCarnetMascota,
-         getEstadisticas, cambiarEstadoTransito } from '../api.js';
+         getEstadisticas, cambiarEstadoTransito, getSugerenciasRefugios, resolverSugerenciaRefugio } from '../api.js';
 import { ESTADOS_SALUD, buildChipEstado, buildCarnetForm, activarCarnetForm, leerCarnetForm, esc } from '../carnet-mascota.js?v=1';
 import { columnasPorMes, barrasHorizontales, barraApilada, medidor, tarjeta, activarTooltips } from '../graficos.js?v=1';
 
@@ -53,6 +53,15 @@ export function render() {
 
         <div id="bo-graficos" class="grid md:grid-cols-2 gap-4 mb-10">
             <p class="text-sm text-stone-400 md:col-span-2">Cargando gráficos...</p>
+        </div>
+
+        <!-- Solo para admins: revisión de los refugios que sugiere la comunidad -->
+        <div class="hidden mb-10" id="bo-sugerencias-bloque">
+            <h2 class="font-bold text-xl text-stone-800 mb-1">Refugios sugeridos por la comunidad
+                <span id="bo-sugerencias-pendientes" class="hidden ml-2 align-middle text-[11px] font-bold px-2 py-1 rounded-full bg-orange-100 text-orange-700"></span>
+            </h2>
+            <p class="text-sm text-stone-500 mb-4">Revisá el perfil de cada refugio antes de aprobarlo: recién ahí aparece en el mapa público.</p>
+            <div id="bo-sugerencias" class="space-y-3"></div>
         </div>
 
         <div class="mb-10" id="bo-transitos-bloque">
@@ -476,9 +485,86 @@ export function init() {
         }
     }
 
+    // Revisión de refugios sugeridos (solo admin: el backend lo exige igual).
+    async function cargarSugerencias() {
+        if (window.PataMatch.user?.role !== 'admin') return;
+        const bloque = $('bo-sugerencias-bloque');
+        const cont = $('bo-sugerencias');
+        try {
+            const { data } = await getSugerenciasRefugios();
+            bloque.classList.remove('hidden');
+
+            const pendientes = data.filter(s => s.status === 'pendiente').length;
+            const badge = $('bo-sugerencias-pendientes');
+            badge.textContent = `${pendientes} pendiente${pendientes === 1 ? '' : 's'}`;
+            badge.classList.toggle('hidden', !pendientes);
+
+            if (!data.length) {
+                cont.innerHTML = '<p class="text-sm text-stone-500">Todavía nadie sugirió un refugio.</p>';
+                return;
+            }
+
+            const etiqueta = {
+                pendiente: 'bg-orange-100 text-orange-700',
+                aprobado: 'bg-green-100 text-green-700',
+                rechazado: 'bg-stone-100 text-stone-500'
+            };
+            const fecha = (d) => new Date(d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+            const urlHttp = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
+
+            cont.innerHTML = data.map(s => `
+                <div class="bg-white rounded-xl border border-stone-100 p-4 flex flex-wrap items-start gap-4">
+                    <div class="flex-1 min-w-[220px]">
+                        <p class="font-semibold text-stone-800 text-sm">${esc(s.name)}
+                            <span class="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${etiqueta[s.status]}">${s.status.toUpperCase()}</span>
+                        </p>
+                        <p class="text-xs text-stone-500">${esc(s.city)}${s.address ? ' · ' + esc(s.address) : ''} · sugerido por ${esc(s.user_name)} el ${fecha(s.created_at)}</p>
+                        ${s.notes ? `<p class="text-xs text-stone-600 mt-1">${esc(s.notes)}</p>` : ''}
+                        ${s.review_note ? `<p class="text-xs text-stone-500 italic mt-1">Motivo: ${esc(s.review_note)}</p>` : ''}
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs font-semibold">
+                            ${urlHttp(s.url) ? `<a href="${esc(urlHttp(s.url))}" target="_blank" rel="noopener noreferrer" class="text-[#D96C4A] hover:underline inline-flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">open_in_new</span>Ver perfil</a>` : ''}
+                            <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=16/${s.lat}/${s.lng}" target="_blank" rel="noopener noreferrer" class="text-[#D96C4A] hover:underline inline-flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">location_on</span>Ver ubicación${s.approximate ? ' (aprox.)' : ''}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        ${s.status !== 'aprobado' ? `<button data-sug-aprobar="${s.id}" class="bg-green-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">${s.status === 'rechazado' ? 'Aprobar igual' : 'Aprobar'}</button>` : ''}
+                        ${s.status !== 'rechazado' ? `<button data-sug-rechazar="${s.id}" class="bg-white border border-stone-200 text-stone-600 text-xs font-semibold px-3 py-2 rounded-lg">${s.status === 'aprobado' ? 'Retirar del mapa' : 'Rechazar'}</button>` : ''}
+                    </div>
+                </div>`).join('');
+
+            cont.querySelectorAll('[data-sug-aprobar]').forEach(b =>
+                b.addEventListener('click', () => resolverSugerencia(b.dataset.sugAprobar, 'aprobado', b)));
+            cont.querySelectorAll('[data-sug-rechazar]').forEach(b =>
+                b.addEventListener('click', () => resolverSugerencia(b.dataset.sugRechazar, 'rechazado', b)));
+        } catch (err) {
+            bloque.classList.add('hidden');
+        }
+    }
+
+    async function resolverSugerencia(id, status, btn) {
+        let nota = '';
+        if (status === 'rechazado') {
+            // prompt devuelve null si se cancela: en ese caso no se hace nada.
+            nota = prompt('Motivo (opcional). Se lo mostramos a quien lo sugirió:');
+            if (nota === null) return;
+        }
+        btn.disabled = true;
+        try {
+            await resolverSugerenciaRefugio(id, status, nota);
+            aviso(status === 'aprobado' ? 'Refugio aprobado: ya está en el mapa' : 'Refugio fuera del mapa', 'success');
+            cargarSugerencias();
+        } catch (err) {
+            aviso(err.message, 'error');
+            btn.disabled = false;
+        }
+    }
+
     function refrescar() {
         cargarResumen();
         cargarGraficos();
+        cargarSugerencias();
         cargarSolicitudes();
         cargarMascotas();
         cargarDonaciones();

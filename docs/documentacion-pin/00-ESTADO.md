@@ -22,6 +22,13 @@ refugios registrados más los que devuelve Google Places / OpenStreetMap en la z
 sumar RF-27 (directorio y mapa de refugios) en 2.6, describir el panel nuevo en 2.13 y
 sumar Google Places / Nominatim como servicios externos en 2.9.
 
+Como OpenStreetMap casi no tiene refugios cargados en Latinoamérica (1 en Córdoba, 0 en
+Buenos Aires) y Overture Maps trae sobre todo criaderos y pet shops, se agregó el botón
+**Sumá un refugio**: la comunidad carga los refugios chicos que no figuran en ningún mapa y
+un admin los aprueba desde el panel de gestión (tabla `shelter_suggestions` en 2.11,
+endpoints `/api/refugios/comunidad` en 2.12). Pendiente: describir el flujo en 2.13 (cómo
+sugerir un refugio y cómo moderar) y sumarlo como requerimiento en 2.6.
+
 ## Cambio de contexto respecto de la revisión anterior
 
 Entre el 5 de agosto y esta fecha se implementaron los módulos que estaban pendientes:
